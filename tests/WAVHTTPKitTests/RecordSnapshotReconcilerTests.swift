@@ -69,3 +69,106 @@ final class RecordSnapshotReconcilerTests: XCTestCase {
         XCTAssertEqual(page.nextCursor, 9)
     }
 }
+
+private actor SnapshotRefreshTransport: HTTPTransport {
+    enum Snapshot {
+        case initial
+        case corrected
+    }
+
+    private var snapshot: Snapshot = .initial
+
+    func use(_ snapshot: Snapshot) {
+        self.snapshot = snapshot
+    }
+
+    nonisolated func send(_ request: URLRequest) async throws -> (data: Data, response: HTTPURLResponse) {
+        let (status, body) = await response(for: request)
+        let response = HTTPURLResponse(
+            url: request.url!,
+            statusCode: status,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        return (Data(body.utf8), response)
+    }
+
+    private func response(for request: URLRequest) -> (Int, String) {
+        let path = request.url?.path ?? ""
+        let method = request.httpMethod ?? "GET"
+
+        if method == "POST", path == "/v1/sessions" {
+            let sid = ((try? JSONSerialization.jsonObject(with: request.httpBody ?? Data())) as? [String: Any])?["session_id"] as? String ?? "s1"
+            return (201, sessionJSON(sid))
+        }
+        if method == "GET", path.hasSuffix("/facts") {
+            switch snapshot {
+            case .initial:
+                return (200, "[{\"id\":12,\"exercise_instance_id\":1,\"exercise\":\"卧推\",\"set_number\":1,\"weight_kg\":60,\"reps\":10,\"weight_provenance\":\"explicit\",\"weight_source_fact_id\":null,\"source_utterance_id\":\"u1\"}]")
+            case .corrected:
+                return (200, "[{\"id\":12,\"exercise_instance_id\":1,\"exercise\":\"卧推\",\"set_number\":1,\"weight_kg\":60,\"reps\":8,\"weight_provenance\":\"explicit\",\"weight_source_fact_id\":null,\"source_utterance_id\":\"u2\"}]")
+            }
+        }
+        if method == "GET", path.hasSuffix("/pending") {
+            switch snapshot {
+            case .initial: return (200, "[{\"id\":1,\"status\":\"open\"}]")
+            case .corrected: return (200, "[{\"id\":1,\"status\":\"resolved\"}]")
+            }
+        }
+        if method == "GET", path.hasSuffix("/events") {
+            return (200, "{\"events\":[],\"next_cursor\":0,\"has_more\":false}")
+        }
+        return (404, "{\"detail\":\"NOT_FOUND\"}")
+    }
+
+    private func sessionJSON(_ sid: String) -> String {
+        "{\"session_id\":\"\(sid)\",\"version\":0,\"status\":\"active\",\"active_exercise_instance_id\":null,\"active_exercise_name\":null,\"last_completed_set_id\":null,\"last_reported_weight\":null,\"next_set_plan\":null}"
+    }
+}
+
+@MainActor
+final class CloudTrainingSnapshotRefreshTests: XCTestCase {
+    private func waitUntil(
+        timeout: Duration = .seconds(2),
+        _ condition: @MainActor () -> Bool
+    ) async -> Bool {
+        let deadline = ContinuousClock.now + timeout
+        while ContinuousClock.now < deadline {
+            if condition() { return true }
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        return condition()
+    }
+
+    func testRefreshReplacesCorrectedFactAndRemovesResolvedPending() async throws {
+        let transport = SnapshotRefreshTransport()
+        let configuration = try BackendHTTPConfiguration(
+            baseURL: URL(string: "https://snapshot.fitcore.test")!,
+            accessToken: "offline-test-token"
+        )
+        let model = CloudTrainingModel(
+            client: BackendHTTPClient(configuration: configuration, transport: transport),
+            jobPollInterval: .milliseconds(20),
+            jobPollTimeout: .seconds(1),
+            drainTimeout: .seconds(1)
+        )
+
+        model.createSession()
+        XCTAssertTrue(await waitUntil { model.phase == .ready })
+
+        model.refreshRecords()
+        XCTAssertTrue(await waitUntil { !model.isRefreshingRecords && model.facts.count == 1 })
+        XCTAssertEqual(model.facts[0].reps, 10)
+        XCTAssertEqual(model.pendingItems.count, 1)
+
+        await transport.use(.corrected)
+        model.refreshRecords()
+        XCTAssertTrue(await waitUntil {
+            !model.isRefreshingRecords && model.facts.first?.reps == 8 && model.pendingItems.isEmpty
+        })
+        XCTAssertEqual(model.facts.count, 1, "纠错不得新增第二张训练组卡片")
+        XCTAssertEqual(model.facts[0].id, 12)
+        XCTAssertEqual(model.facts[0].sourceUtteranceID, "u2")
+        XCTAssertTrue(model.pendingItems.isEmpty, "服务端已处理 Pending 后，UI 不得残留旧待确认卡片")
+    }
+}
