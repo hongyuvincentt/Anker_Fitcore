@@ -33,7 +33,8 @@ struct TodayView: View {
                             .frame(width: 42, height: 42).background(FitcoreTheme.limeSoft, in: RoundedRectangle(cornerRadius: 14))
                         VStack(alignment: .leading, spacing: 5) {
                             Text("云端训练链 · 口述到复盘").font(.subheadline.weight(.bold))
-                            Text("离线 Mock 集成 · 不访问真实后端").font(.caption).foregroundStyle(FitcoreTheme.muted)
+                            Text(store.cloudTraining.isMock ? "离线 Mock · 不访问真实后端" : "Real HTTP · 服务端事实为准")
+                                .font(.caption).foregroundStyle(FitcoreTheme.muted)
                         }
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right").font(.caption.weight(.bold))
