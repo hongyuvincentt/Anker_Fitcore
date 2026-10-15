@@ -9,8 +9,9 @@ import Foundation
 /// - Official training sets come ONLY from Facts/Review responses; an upload
 ///   202, job `done`, a transcript, or committed candidates never add a record
 ///   card by themselves.
-/// - Facts dedup by fact id, events dedup by event_seq, pending dedup by a
-///   stable pending key — refreshing can never duplicate cards.
+/// - Facts and Pending are reconciled from authoritative server snapshots:
+///   same-id corrections replace old values and resolved Pending disappears.
+///   Events remain deduplicated by event_seq.
 /// - Each logical recording keeps exactly one upload identity; a retry reuses
 ///   the same utterance_id, sequence and bytes (WAVSessionUploader), and
 ///   re-submitting a recording that was already handed to the model is ignored,
@@ -130,8 +131,6 @@ final class CloudTrainingModel: ObservableObject {
     private var epoch = 0
     private var submittedRecordingIDs: Set<String> = []
     private var eventCursor = 0
-    private var pendingKeys: Set<String> = []
-    private var factIDs: Set<Int> = []
     private var maxEventSeq = 0
     private var pollTasks: [String: Task<Void, Never>] = [:]
     private var refreshTask: Task<Void, Never>?
@@ -277,8 +276,6 @@ final class CloudTrainingModel: ObservableObject {
         canRetryUploadWithOriginalIdentity = false
         submittedRecordingIDs = []
         eventCursor = 0
-        pendingKeys = []
-        factIDs = []
         maxEventSeq = 0
         recordsFailure = nil
         finishID = UUID().uuidString
@@ -532,23 +529,11 @@ final class CloudTrainingModel: ObservableObject {
     }
 
     private func mergeFacts(_ fetched: [TrainingFactDTO]) {
-        var merged = facts
-        for fact in fetched where !factIDs.contains(fact.id) {
-            factIDs.insert(fact.id)
-            merged.append(fact)
-        }
-        facts = merged
+        facts = RecordSnapshotReconciler.facts(current: facts, fetched: fetched)
     }
 
     private func mergePending(_ fetched: [PendingItem]) {
-        var merged = pendingItems
-        for item in fetched {
-            let key = Self.pendingKey(item)
-            guard !pendingKeys.contains(key) else { continue }
-            pendingKeys.insert(key)
-            merged.append(item)
-        }
-        pendingItems = merged
+        pendingItems = RecordSnapshotReconciler.pending(current: pendingItems, fetched: fetched)
     }
 
     private func mergeEvents(_ page: EventsPage) {
@@ -559,15 +544,6 @@ final class CloudTrainingModel: ObservableObject {
         }
         events = merged
         eventCursor = max(eventCursor, page.nextCursor)
-    }
-
-    private static func pendingKey(_ item: PendingItem) -> String {
-        if let pendingID = item.pendingID { return "id:\(pendingID)" }
-        // GAP-PENDING-SHAPE fallback: a stable hash over the raw fields.
-        return "fields:" + item.fields.keys.sorted().compactMap { key -> String? in
-            guard let value = item.fields[key] else { return nil }
-            return "\(key)=\(value)"
-        }.joined(separator: "|")
     }
 
     // MARK: - Finish
@@ -703,8 +679,6 @@ final class CloudTrainingModel: ObservableObject {
         canRetryUploadWithOriginalIdentity = false
         submittedRecordingIDs = []
         eventCursor = 0
-        pendingKeys = []
-        factIDs = []
         maxEventSeq = 0
         finishID = UUID().uuidString
     }
