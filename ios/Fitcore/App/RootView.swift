@@ -5,6 +5,16 @@ struct RootView: View {
     @State private var startAfterDeviceSheet = false
 
     var body: some View {
+        // LHY-04 evidence mode: launch with --lhy04-screenshot-tour to capture
+        // the cloud chain UI states offline (delivery evidence, not a feature).
+        if ProcessInfo.processInfo.arguments.contains("--lhy04-screenshot-tour") {
+            CloudTrainingTourView()
+        } else {
+            mainInterface
+        }
+    }
+
+    private var mainInterface: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 Group {

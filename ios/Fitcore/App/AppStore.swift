@@ -37,6 +37,10 @@ final class AppStore: ObservableObject {
 
   let environment: AppEnvironment?
   let configurationError: String?
+  /// LHY-04: the cloud WAV training chain view-model. App-scoped so leaving and
+  /// returning to the training page never regenerates session or upload
+  /// identities. This round it always runs on the offline Mock transport.
+  let cloudTraining = CloudTrainingModel.mock()
   private let recorder: any RecorderGateway
   private let mockControls: (any MockRecorderControlling)?
   private var analysis: any TrainingAnalysisService

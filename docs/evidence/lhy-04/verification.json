@@ -1,0 +1,105 @@
+{
+  "task": "LHY-04",
+  "round_scope": "offline_mock_training_ui_only",
+  "software_status": "implemented_and_offline_mock_verified",
+  "real_backend": "not_performed_not_authorized_this_round",
+  "physical_iphone": "not_tested_this_round (see not_executed)",
+  "git_base": "83b3719 (baseline snapshot on main, pushed)",
+  "contract_sources": [
+    "reference/api/WAV_HTTP_API_2026-10-15.md (V1.1, frozen)",
+    "reference/api/STABLE_BASELINE_WAV_HTTP_REPORT_2026-10-15.md",
+    "reference/api/EVENT_FINISH_REPORT_2026-10-15.md",
+    "reference/api/IOS_AUDIO_CONTRACT_2026-10-15.md"
+  ],
+  "implementation": {
+    "new_files": [
+      "ios/Fitcore/Core/WAVHTTP/CloudTrainingModel.swift (@MainActor ViewModel: phase machine, upload identity via WAVSessionUploader, facts/pending/events merge with dedup, finish drain, review, epoch-based reset)",
+      "ios/Fitcore/Core/WAVHTTP/MockCloudBackend.swift (in-app offline backend, actor HTTPTransport; powers both the Mock UI and CloudTrainingModelTests)",
+      "ios/Fitcore/Features/Training/CloudTrainingView.swift (five UI slices: prepare / recording+upload / records / finish / review; Mock badge + offline declaration)",
+      "ios/Fitcore/Features/Training/CloudTrainingTourView.swift (evidence-only screenshot tour behind --lhy04-screenshot-tour launch argument; not reachable in normal use)",
+      "tests/WAVHTTPKitTests/CloudTrainingModelTests.swift (11 tests)"
+    ],
+    "modified_files": [
+      "ios/Fitcore/App/AppStore.swift (app-scoped CloudTrainingModel.mock(); leaving/re-entering the page never regenerates identities)",
+      "ios/Fitcore/App/RootView.swift (tour switch, no behavior change without the launch argument)",
+      "ios/Fitcore/Features/Today/TodayView.swift (entry link to the cloud chain page)",
+      "ios/Fitcore.xcodeproj/project.pbxproj (regenerated; 39 Swift sources)"
+    ]
+  },
+  "presentation_rules_enforced": {
+    "official_records": "facts/review only; upload 202, job done, transcript text and committed candidates never become record cards",
+    "identity_stability": "one recording = one utterance identity; re-submit of the same recordingID is ignored; retry reuses identical utterance_id/sequence/bytes; refresh/leave/retry never regenerate identities",
+    "dedup": "facts by fact id, events by event_seq, pending by stable key; repeated refreshes never duplicate cards",
+    "decode_failures": "records refresh failure keeps previous data and surfaces an error banner; never rendered as 'no pending content'",
+    "gaps_kept_open": [
+      "GAP-PENDING-SHAPE: pending page uses only confirmed fields (id/status); other fields not guessed",
+      "GAP-PENDING-RESOLVE-BODY: resolve action shows '暂不可用' with joint-debug precondition; no request body invented"
+    ],
+    "honest_uncertainty": "SOURCE_UNCERTAIN / SOURCE_NOT_VERIFIED / speaker_verification=not_performed displayed as-is; client never constructs a trusted identity"
+  },
+  "mock_backend_honesty": {
+    "finish": "202 draining until GET poll completes; awaiting_audio stays 409 until the missing sequence is actually uploaded (re-POSTing finish_id alone never completes); review envelope only when GET /review would serve it",
+    "pending": "only {id, status} exposed (GAP-PENDING-SHAPE)",
+    "speaker_verification": "always not_performed",
+    "scenarios": "8 presets, contract-documented failures only (503x3, 401, malformed JSON, awaiting_audio, review 409 xN, jobs stuck)",
+    "fixtures": "CloudTrainingModel.syntheticDemoWAV fixed numeric pattern; never real voice audio"
+  },
+  "checks": [
+    {
+      "name": "CloudTrainingModelTests (offline, in-process MockCloudBackend)",
+      "command": "swift test --scratch-path /tmp/fitcore-lhy04-build --filter CloudTrainingModelTests",
+      "tests": 11,
+      "failures": 0,
+      "exit_code": 0,
+      "covers": [
+        "processing -> official Facts only from Facts feed",
+        "DEFER -> Pending with confirmed fields only; second utterance COMMIT",
+        "upload 503x3 failure -> retry with ORIGINAL identity (unique body SHA-256 set = 1, accepted uploads = 1)",
+        "401 -> failed(unauthorized)",
+        "job poll timeout -> requery recovers without a new upload",
+        "malformed facts/pending keeps previous data, surfaces decode error",
+        "finish 202 draining -> GET polls >= 2 -> complete with review",
+        "awaiting_audio 409 until supplement; same finish_id; POST count >= 3",
+        "review 409 x2 then success on 3rd fetch",
+        "repeated refresh / re-submit never duplicate cards or identities; reset then fresh session"
+      ]
+    },
+    {
+      "name": "Full swift test (regression)",
+      "command": "swift test --scratch-path /tmp/fitcore-lhy04-build",
+      "tests": 85,
+      "failures": 0,
+      "exit_code": 0,
+      "detail": "WAVHTTPKitTests 55 (44 LHY-03 + 11 new) + WAVCaptureKitTests 30"
+    },
+    {
+      "name": "Scaffold checks (verify.py)",
+      "command": "python3 -B scripts/verify.py",
+      "exit_code": 0
+    },
+    {
+      "name": "Fitcore-Mock iOS Simulator build",
+      "command": "xcodebuild -project ios/Fitcore.xcodeproj -scheme Fitcore-Mock -destination 'platform=iOS Simulator,name=iPhone 18 Pro' -derivedDataPath /tmp/fitcore-lhy04-dd build",
+      "exit_code": 0,
+      "detail": "BUILD SUCCEEDED; only the known harmless appintentsmetadataprocessor warning"
+    },
+    {
+      "name": "UI state screenshots (real simulator pixels)",
+      "method": "app launched with --lhy04-screenshot-tour drives the production CloudTrainingView against MockCloudBackend; an external watcher polls a marker file and captures each state via `xcrun simctl io <UDID> screenshot`; all 17 PNGs unique (md5), key ones OCR-verified",
+      "device": "iPhone 18 Pro simulator (iOS 27.0), UDID A9F87F28-D3A4-4DE3-8849-480880E229F4",
+      "screenshots": "docs/evidence/lhy-04/screenshots/01..17 (17 files): today entry; prepare idle/ready; processing (no official record); facts from server; records decode failure keeps data; finish draining 202; finished review; pending DEFER SOURCE_UNCERTAIN; upload failed + original-identity retry + recovered; unauthorized 401; poll timeout; awaiting_audio 409; awaiting-audio recovered review; review not ready 409; review success after retry"
+    }
+  ],
+  "bugs_found_and_fixed_this_round": [
+    "MockCloudBackend routing: '/v1/sessions'.split drops the leading empty component (2 parts, not 3) so POST /v1/sessions fell through to session lookup and answered 404; fixed the collection-route condition (caught by the new tests, would have broken the in-app Mock mode too)",
+    "MockCloudBackend review volume: weight stored as Int failed `as? Double`, volume_kg_reps always 0; fixed with NSNumber extraction",
+    "Transient screenshot states (processing/draining) initially captured after they had already advanced; widened the windows with a slower poll interval for that scenario"
+  ],
+  "not_executed": [
+    "physical iPhone Mock run (simulator build cannot replace device acceptance; not run this round)",
+    "real AWS end-to-end, real tokens, real voice uploads (not authorized this round)",
+    "Pending resolve interaction (blocked by GAP-PENDING-RESOLVE-BODY; UI shows 暂不可用 with joint-debug precondition)"
+  ],
+  "lhy08_note": "LHY-08 cloud-chain acceptance is covered ONLY for the offline Mock integration part (states above + 11 tests). Still missing: physical-device run, hardware/audio-path specifics, and real cloud acceptance.",
+  "scratch_path_note": "build/test scratch kept under /tmp (Desktop is iCloud-synced; FinderInfo xattr breaks codesign)"
+}
