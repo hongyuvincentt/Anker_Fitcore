@@ -1,18 +1,20 @@
 import SwiftUI
 import UIKit
 
-/// LHY-04: the cloud WAV training chain, end to end, on the frozen V1.1 HTTP
-/// contract. Five slices: prepare, record/upload, records (facts + pending),
-/// finish, review. This round runs entirely against the in-app offline Mock
-/// backend — no request leaves the machine, no real token, no real audio.
+/// LHY-04/05: the cloud WAV training chain on the frozen V1.1 HTTP contract.
+/// The same app-scoped model supports an explicit offline Mock mode and an
+/// explicit Real HTTP mode. Selecting Real never sends a request by itself.
 struct CloudTrainingView: View {
     @EnvironmentObject private var store: AppStore
 
     var body: some View {
+        let configuredURL = store.cloudBaseURL.isEmpty
+            ? store.environment?.apiBaseURL
+            : URL(string: store.cloudBaseURL)
         // The model is app-scoped (owned by the store), so leaving and
         // returning to this page never regenerates session or upload
         // identities; the content view observes it directly.
-        CloudTrainingContent(model: store.cloudTraining)
+        CloudTrainingContent(model: store.cloudTraining, realBaseURL: configuredURL)
     }
 }
 
@@ -25,9 +27,16 @@ struct CloudTrainingContent: View {
     @State private var scenarioName = "常规 · 提交并复盘"
     @State private var showResetConfirmation = false
     @State private var submitError: String?
+    @State private var modeError: String?
+    private let realBaseURL: URL?
 
-    init(model: CloudTrainingModel, scenarioName: String = "常规 · 提交并复盘") {
+    init(
+        model: CloudTrainingModel,
+        scenarioName: String = "常规 · 提交并复盘",
+        realBaseURL: URL? = nil
+    ) {
         self.model = model
+        self.realBaseURL = realBaseURL
         _scenarioName = State(initialValue: scenarioName)
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("FitcoreCloudTrainingWAVs", isDirectory: true)
@@ -47,6 +56,7 @@ struct CloudTrainingContent: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 headerCard
+                runtimeModeSection
                 prepareSection
                 if model.phase == .ready || model.awaitingAudioSequences != nil {
                     recordingSection
@@ -83,11 +93,13 @@ struct CloudTrainingContent: View {
             }
             Button("取消", role: .cancel) { }
         } message: {
-            Text("服务端已接收的内容保持在 Mock 后端；本机视图与上传身份将清空，重新开始需创建新会话。")
+            Text(model.isMock
+                ? "Mock 后端已接收的内容保留在本机脚本状态；本机视图与上传身份将清空，重新开始需创建新会话。"
+                : "真实服务端已接收的内容不会因本机重置而删除；这里只清空本机视图与上传身份，重新开始需创建新会话。")
         }
     }
 
-    // MARK: - Header
+    // MARK: - Header / runtime mode
 
     private var headerCard: some View {
         FitcoreCard {
@@ -98,15 +110,100 @@ struct CloudTrainingContent: View {
                         Text("口述 → 上传 → 服务端事实 → 复盘").font(.system(size: 18, weight: .bold))
                     }
                     Spacer()
-                    MockBadge()
+                    runtimeBadge
                 }
-                Text("本轮为离线 Mock 集成：全部请求由本机脚本后端应答，不访问真实 AWS，不需要真实令牌，也不上传真人录音。")
+                Text(model.isMock
+                    ? "当前为离线 Mock：全部请求由本机脚本后端应答，不访问真实 AWS，不需要真实令牌，也不上传真人录音。"
+                    : "当前为 Real HTTP：请求会发送到已配置的 Fitcore HTTPS 后端；访问 token 仅从本机 Keychain 读取，不显示、不写日志。首轮只用合成 WAV 验证，不上传真人录音。")
                     .font(.caption).foregroundStyle(FitcoreTheme.muted).fixedSize(horizontal: false, vertical: true)
                 Text("正式训练组只来自服务端 Facts / Review。上传 202、Job done、识别文本或候选结果都不会自行转成正式记录。")
                     .font(.caption.weight(.medium)).foregroundStyle(FitcoreTheme.navy)
                     .padding(10).background(FitcoreTheme.limeSoft, in: RoundedRectangle(cornerRadius: 12))
                     .fixedSize(horizontal: false, vertical: true)
             }
+        }
+    }
+
+    private var runtimeBadge: some View {
+        Text(model.isMock ? "MOCK" : "REAL HTTP")
+            .font(.system(size: 10, weight: .bold)).tracking(0.7)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .foregroundStyle(model.isMock ? FitcoreTheme.navy : .green)
+            .background((model.isMock ? FitcoreTheme.limeSoft : Color.green.opacity(0.12)), in: Capsule())
+    }
+
+    private var runtimeModeSection: some View {
+        FitcoreCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("运行模式").font(.subheadline.weight(.bold))
+                        Text("只有空闲状态可切换；切换本身不会发起网络请求。")
+                            .font(.caption2).foregroundStyle(FitcoreTheme.muted)
+                    }
+                    Spacer()
+                }
+                HStack(spacing: 10) {
+                    runtimeModeButton(title: "Mock", systemImage: "testtube.2", real: false)
+                    runtimeModeButton(title: "Real HTTP", systemImage: "network", real: true)
+                }
+                if model.isMock {
+                    Text("离线脚本后端 · 适合 UI / 状态机回归。")
+                        .font(.caption).foregroundStyle(FitcoreTheme.muted)
+                } else {
+                    Text("目标：\(realBaseURL?.host ?? "未配置 HTTPS 地址") · token 已隐藏；首次联调请只上传下方合成 WAV。")
+                        .font(.caption).foregroundStyle(FitcoreTheme.muted)
+                }
+                if let modeError {
+                    Label(modeError, systemImage: "exclamationmark.triangle")
+                        .font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    private func runtimeModeButton(title: String, systemImage: String, real: Bool) -> some View {
+        let selected = real ? !model.isMock : model.isMock
+        return Button {
+            switchRuntimeMode(real: real)
+        } label: {
+            Label(title, systemImage: systemImage)
+                .font(.caption.weight(.bold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .foregroundStyle(selected ? .white : FitcoreTheme.navy)
+                .background(selected ? FitcoreTheme.navy : FitcoreTheme.canvas, in: RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
+        .disabled(!model.canSwitchRuntimeMode)
+    }
+
+    @MainActor
+    private func switchRuntimeMode(real: Bool) {
+        guard model.canSwitchRuntimeMode else {
+            modeError = "当前会话已开始。请先结束或重置本会话，再切换 Mock / Real HTTP。"
+            return
+        }
+        do {
+            if real {
+                guard let realBaseURL else {
+                    modeError = "尚未配置 HTTPS Base URL。请先在“演示与开发设置”连接 Fitcore 后端。"
+                    return
+                }
+                guard let token = CloudCredentials.read(), !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    modeError = "Keychain 中没有 Fitcore 访问令牌。请先在“演示与开发设置”连接后端；这里不会要求或保存模型 API Key。"
+                    return
+                }
+                try model.useRealBackend(baseURL: realBaseURL, accessToken: token)
+            } else {
+                try model.useMockBackend()
+            }
+            modeError = nil
+            submitError = nil
+            localConsent = false
+            scenarioName = "常规 · 提交并复盘"
+        } catch {
+            modeError = error.localizedDescription
         }
     }
 
@@ -224,8 +321,12 @@ struct CloudTrainingContent: View {
         FitcoreCard {
             VStack(alignment: .leading, spacing: 14) {
                 Toggle("我同意录制并保存在本机（仅限本机录音）", isOn: $localConsent)
-                    .disabled(capture.isBusy)
+                    .disabled(capture.isBusy || !model.isMock)
                     .font(.subheadline)
+                if !model.isMock {
+                    Label("Real HTTP 首轮验证仅开放合成 WAV。当前本机真人录音授权不包含云端上传，因此麦克风上传保持关闭。", systemImage: "lock.shield")
+                        .font(.caption).foregroundStyle(FitcoreTheme.muted).fixedSize(horizontal: false, vertical: true)
+                }
                 if capture.phase == .recording, let start = capture.startedAt {
                     TimelineView(.periodic(from: start, by: 0.5)) { context in
                         Text(String(format: "正在录音 %.1f 秒", max(0, context.date.timeIntervalSince(start))))
@@ -252,23 +353,28 @@ struct CloudTrainingContent: View {
                             Task { await capture.start(localConsent: localConsent) }
                         } label: { Label("开始录音", systemImage: "mic.fill") }
                             .buttonStyle(PrimaryButtonStyle())
-                            .disabled(!localConsent || uploadBlocked || model.phase == .finished)
+                            .disabled(!model.isMock || !localConsent || uploadBlocked || model.phase == .finished)
                     }
                     if capture.isBusy || capture.phase == .recording {
                         Button(role: .destructive) { capture.cancel() } label: { Label("取消本段", systemImage: "xmark") }
                             .buttonStyle(OutlineButtonStyle())
                     }
                 }
-                if model.isMock {
-                    Button {
-                        submitError = nil
-                        injectSyntheticUtterance()
-                    } label: { Label("注入合成音频（Mock 演示，非真人语音）", systemImage: "waveform.badge.plus") }
-                        .buttonStyle(OutlineButtonStyle())
-                        .disabled(uploadBlocked || model.phase == .finished)
-                    Text("合成音频由固定数值模式生成、明确非真人语音，用于离线演示完整链路；真人录音路径走上方麦克风。")
-                        .font(.caption2).foregroundStyle(FitcoreTheme.muted).fixedSize(horizontal: false, vertical: true)
+                Button {
+                    submitError = nil
+                    injectSyntheticUtterance()
+                } label: {
+                    Label(
+                        model.isMock ? "注入合成音频（Mock 演示，非真人语音）" : "上传合成 WAV（Real HTTP 验证，非真人语音）",
+                        systemImage: "waveform.badge.plus"
+                    )
                 }
+                .buttonStyle(OutlineButtonStyle())
+                .disabled(uploadBlocked || model.phase == .finished)
+                Text(model.isMock
+                    ? "合成音频由固定数值模式生成、明确非真人语音，用于离线演示完整链路；真人录音路径仅在 Mock 下用于本机验证。"
+                    : "合成 WAV 由固定数值模式生成，不含真人语音。点击后才会向真实 HTTPS 后端发送请求，用于首轮接口兼容性验证。")
+                    .font(.caption2).foregroundStyle(FitcoreTheme.muted).fixedSize(horizontal: false, vertical: true)
                 if uploadBlocked {
                     Text(model.hasUploadInFlight ? "有片段正在上传，请等待完成。" : "有片段未完成确认，请先重试或重新查询结果。")
                         .font(.caption).foregroundStyle(.orange)
@@ -278,8 +384,9 @@ struct CloudTrainingContent: View {
     }
 
     private var captureStatusText: String {
+        if !model.isMock { return "Real HTTP 首轮只允许合成 WAV；真人麦克风数据不会上传。" }
         switch capture.phase {
-        case .idle: return "建议每段 5–20 秒，说完自然停止。录音先保存在本机，通过校验后自动提交到训练链。"
+        case .idle: return "建议每段 5–20 秒，说完自然停止。录音先保存在本机，通过校验后提交到离线训练链。"
         case .requestingPermission: return "正在申请麦克风权限…"
         case .recording: return "正在录音"
         case .validating: return "正在完成录音并检查文件…"
@@ -665,6 +772,12 @@ struct CloudTrainingContent: View {
     /// recording ID is its stable utterance identity; re-entry or a repeated
     /// change notification can never submit it twice (model-side guard).
     private func submitLatestCapture() {
+        guard model.isMock else {
+            // Current authorization is local-only. Real HTTP acceptance starts
+            // with synthetic WAV; a separate explicit cloud-audio consent must
+            // exist before any human recording can cross the network boundary.
+            return
+        }
         guard let recording = capture.recordings.last else { return }
         guard !model.hasSubmitted(recordingID: recording.id) else { return }
         do {
@@ -691,7 +804,7 @@ struct CloudTrainingContent: View {
             let accepted = await model.submitRecording(
                 recordingID: recordingID,
                 wavData: wav,
-                audioSource: "synthetic_mock_demo"
+                audioSource: model.isMock ? "synthetic_mock_demo" : "synthetic_http_probe"
             )
             if !accepted, model.lastFailure != nil {
                 submitError = model.lastFailure?.message
