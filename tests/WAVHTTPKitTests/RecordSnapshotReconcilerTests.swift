@@ -154,18 +154,21 @@ final class CloudTrainingSnapshotRefreshTests: XCTestCase {
         )
 
         model.createSession()
-        XCTAssertTrue(await waitUntil { model.phase == .ready })
+        let ready = await waitUntil { model.phase == .ready }
+        XCTAssertTrue(ready)
 
         model.refreshRecords()
-        XCTAssertTrue(await waitUntil { !model.isRefreshingRecords && model.facts.count == 1 })
+        let initialLoaded = await waitUntil { !model.isRefreshingRecords && model.facts.count == 1 }
+        XCTAssertTrue(initialLoaded)
         XCTAssertEqual(model.facts[0].reps, 10)
         XCTAssertEqual(model.pendingItems.count, 1)
 
         await transport.use(.corrected)
         model.refreshRecords()
-        XCTAssertTrue(await waitUntil {
+        let correctedLoaded = await waitUntil {
             !model.isRefreshingRecords && model.facts.first?.reps == 8 && model.pendingItems.isEmpty
-        })
+        }
+        XCTAssertTrue(correctedLoaded)
         XCTAssertEqual(model.facts.count, 1, "纠错不得新增第二张训练组卡片")
         XCTAssertEqual(model.facts[0].id, 12)
         XCTAssertEqual(model.facts[0].sourceUtteranceID, "u2")
