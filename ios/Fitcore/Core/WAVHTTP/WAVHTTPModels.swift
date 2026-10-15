@@ -289,6 +289,26 @@ struct PendingItem: Decodable, Sendable, Equatable {
     }
 }
 
+/// Reconciles server-owned records without inventing client facts.
+/// `/facts` is an authoritative current snapshot, so same-id corrections replace
+/// old values. `/pending` may contain processed rows; only currently-open items
+/// belong in the user-facing Pending list. Unknown fields remain untouched.
+enum RecordSnapshotReconciler {
+    static func facts(
+        current _: [TrainingFactDTO],
+        fetched: [TrainingFactDTO]
+    ) -> [TrainingFactDTO] {
+        fetched
+    }
+
+    static func pending(
+        current _: [PendingItem],
+        fetched: [PendingItem]
+    ) -> [PendingItem] {
+        fetched.filter(\.isOpen)
+    }
+}
+
 /// Confirmed resolve fields only (resolution_id, action, context_version).
 /// The exact confirm_set payload fields are NOT pinned by the provided contract
 /// and are therefore not invented here. Field-level gap: GAP-PENDING-RESOLVE-BODY.
