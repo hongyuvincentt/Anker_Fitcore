@@ -119,8 +119,8 @@ final class CloudTrainingModel: ObservableObject {
     /// original identity — the "retry with original identity" action applies.
     @Published private(set) var canRetryUploadWithOriginalIdentity = false
 
-    let client: BackendHTTPClient
-    let isMock: Bool
+    private(set) var client: BackendHTTPClient
+    @Published private(set) var isMock: Bool
 
     private let jobPollInterval: Duration
     private let jobPollTimeout: Duration
@@ -172,6 +172,17 @@ final class CloudTrainingModel: ObservableObject {
 
     // MARK: - Init
 
+    enum RuntimeModeError: LocalizedError, Equatable {
+        case sessionActive
+
+        var errorDescription: String? {
+            switch self {
+            case .sessionActive:
+                return "当前云端训练会话尚未重置。请结束或重置当前会话后再切换 Mock / Real HTTP。"
+            }
+        }
+    }
+
     init(
         client: BackendHTTPClient,
         jobPollInterval: Duration = .milliseconds(300),
@@ -185,19 +196,38 @@ final class CloudTrainingModel: ObservableObject {
         self.drainTimeout = drainTimeout
     }
 
-    /// Mock-only factory for this round: an offline scripted backend, no real
-    /// endpoint, no real token. The token below is a placeholder and never a
-    /// credential.
+    /// Mock-only factory: an offline scripted backend, no real endpoint and no
+    /// real token. The token below is a placeholder and never a credential.
     static func mock(jobPollTimeout: Duration = .seconds(8)) -> CloudTrainingModel {
+        CloudTrainingModel(client: makeMockClient(), jobPollTimeout: jobPollTimeout)
+    }
+
+    /// Runtime switching is intentionally explicit and is only allowed while no
+    /// cloud session exists. This prevents an in-flight upload/session identity
+    /// from silently changing transport underneath the user.
+    var canSwitchRuntimeMode: Bool {
+        phase == .idle && sessionID == nil && uploader == nil && utterances.isEmpty
+    }
+
+    func useRealBackend(baseURL: URL, accessToken: String) throws {
+        guard canSwitchRuntimeMode else { throw RuntimeModeError.sessionActive }
+        let configuration = try BackendHTTPConfiguration(baseURL: baseURL, accessToken: accessToken)
+        client = BackendHTTPClient(configuration: configuration)
+        isMock = false
+    }
+
+    func useMockBackend() throws {
+        guard canSwitchRuntimeMode else { throw RuntimeModeError.sessionActive }
+        client = Self.makeMockClient()
+        isMock = true
+    }
+
+    private static func makeMockClient() -> BackendHTTPClient {
         let configuration = try! BackendHTTPConfiguration(
             baseURL: URL(string: "https://mock.fitcore.local")!,
             accessToken: "mock-offline-placeholder"
         )
-        let backend = MockCloudBackend()
-        return CloudTrainingModel(
-            client: BackendHTTPClient(configuration: configuration, transport: backend),
-            jobPollTimeout: jobPollTimeout
-        )
+        return BackendHTTPClient(configuration: configuration, transport: MockCloudBackend())
     }
 
     /// Deterministic, clearly-synthetic non-silent WAV (16 kHz / mono / PCM16)
