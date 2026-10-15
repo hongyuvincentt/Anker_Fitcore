@@ -1,0 +1,1 @@
+﻿recording_id,speaker_id_pseudonym,consent_id,session_id,scene_id,recorded_at,device_type,recording_source,sample_rate_hz,channels,bits_per_sample,duration_sec,size_bytes,sha256,private_storage_pointer,quality_status,label_status,data_split,retention_status

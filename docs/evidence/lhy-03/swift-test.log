@@ -1,0 +1,183 @@
+Building for debugging...
+[1 / 5]
+Build complete! (0.38 sec)
+Test Suite 'All tests' started at 2026-10-16 02:59:25.463.
+Test Suite 'WAVHTTPKitTests.xctest' started at 2026-10-16 02:59:25.466.
+Test Suite 'BackendHTTPClientTests' started at 2026-10-16 02:59:25.466.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testConfigurationNormalizesTrailingSlash]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testConfigurationNormalizesTrailingSlash]' passed (0.002 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testConfigurationRejectsNonHTTPSAndBadTokens]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testConfigurationRejectsNonHTTPSAndBadTokens]' passed (0.001 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testCreateSessionConflictMapsToAlreadyExists]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testCreateSessionConflictMapsToAlreadyExists]' passed (0.018 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testCreateSessionPostsBodyAndDecodes201]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testCreateSessionPostsBodyAndDecodes201]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testEnsureSessionRecoversExistingSessionViaGet]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testEnsureSessionRecoversExistingSessionViaGet]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testErrorsAndDescriptionsNeverLeakTheToken]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testErrorsAndDescriptionsNeverLeakTheToken]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testHealthDecodesNewFieldsAndSendsNoAuthorizationHeader]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testHealthDecodesNewFieldsAndSendsNoAuthorizationHeader]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testJobStatusDecodesStatesAndExhaustedFlag]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testJobStatusDecodesStatesAndExhaustedFlag]' passed (0.001 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testSessionNotFoundMapsTo404]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testSessionNotFoundMapsTo404]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUpload422And413AreMappedWithoutRetry]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUpload422And413AreMappedWithoutRetry]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadConflictVariantsAreMappedAndNeverRetried]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadConflictVariantsAreMappedAndNeverRetried]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploaderAssignsSequencesFromZeroAndAdvancesOnAccept]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploaderAssignsSequencesFromZeroAndAdvancesOnAccept]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploaderKeepsFailedUploadIdentityForRetry]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploaderKeepsFailedUploadIdentityForRetry]' passed (0.003 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadMultipartContainsExactlyTheContractFields]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadMultipartContainsExactlyTheContractFields]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadOmitsOptionalAudioSourceWhenNotProvided]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadOmitsOptionalAudioSourceWhenNotProvided]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRejectsFilesOverTheContractLimit]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRejectsFilesOverTheContractLimit]' passed (0.377 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRetryBudgetExhaustionStopsRetrying]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRetryBudgetExhaustionStopsRetrying]' passed (0.004 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRetryOn503ResendsIdenticalRequest]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRetryOn503ResendsIdenticalRequest]' passed (0.002 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRetryOnTransportFailureResendsIdenticalRequest]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadRetryOnTransportFailureResendsIdenticalRequest]' passed (0.003 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadValidatesIdentityFieldLengthsAndSequence]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadValidatesIdentityFieldLengthsAndSequence]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadValidatesWAVBeforeSendingAnything]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testUploadValidatesWAVBeforeSendingAnything]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobCancellationStopsPolling]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobCancellationStopsPolling]' passed (0.051 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobCompletionPollsUntilDone]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobCompletionPollsUntilDone]' passed (0.004 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobStopsWhenServerRetryBudgetExhausted]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobStopsWhenServerRetryBudgetExhausted]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobTimesOut]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPClientTests testWaitForJobTimesOut]' passed (0.063 seconds).
+Test Suite 'BackendHTTPClientTests' passed at 2026-10-16 02:59:26.000.
+	 Executed 25 tests, with 0 failures (0 unexpected) in 0.532 (0.535) seconds
+Test Suite 'BackendHTTPContractTests' started at 2026-10-16 02:59:26.000.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testDoneOutcomeDefersAndRejectsAreDistinctFromCommit]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testDoneOutcomeDefersAndRejectsAreDistinctFromCommit]' passed (0.001 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testDrainToCompletionPollsUntilFinished]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testDrainToCompletionPollsUntilFinished]' passed (0.003 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testDrainToCompletionRepostsWhenReadyToFinalize]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testDrainToCompletionRepostsWhenReadyToFinalize]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testEventsCursorAheadMapsToConflict]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testEventsCursorAheadMapsToConflict]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testEventsSendsCursorQueryAndDecodesPage]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testEventsSendsCursorQueryAndDecodesPage]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testEventsValidatesCursorAndLimitLocally]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testEventsValidatesCursorAndLimitLocally]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFactsDecodeFromSanitizedSample]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFactsDecodeFromSanitizedSample]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinish503RetriesSameFinishBody]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinish503RetriesSameFinishBody]' passed (0.002 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishAwaitingAudio409CarriesMissingSequences]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishAwaitingAudio409CarriesMissingSequences]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishDraining202Decodes]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishDraining202Decodes]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishFinished200DecodesReviewSnapshot]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishFinished200DecodesReviewSnapshot]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishRangeExcludesAcceptedAudio409]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishRangeExcludesAcceptedAudio409]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishStatus404MapsToNotFound]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testFinishStatus404MapsToNotFound]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testPendingDecodesPermissiveShapeAndFiltersOpenClientSide]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testPendingDecodesPermissiveShapeAndFiltersOpenClientSide]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testResolvePendingSendsConfirmedFieldsAndMaps409]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testResolvePendingSendsConfirmedFieldsAndMaps409]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testReview409MapsToNotFinished]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testReview409MapsToNotFinished]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testReviewDecodesFromSanitizedSample]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testReviewDecodesFromSanitizedSample]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testUnauthorized401And403AreMappedAndNotRetried]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testUnauthorized401And403AreMappedAndNotRetried]' passed (0.000 seconds).
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testUnexpectedStatusIsSurfaced]' started.
+Test Case '-[WAVHTTPKitTests.BackendHTTPContractTests testUnexpectedStatusIsSurfaced]' passed (0.000 seconds).
+Test Suite 'BackendHTTPContractTests' passed at 2026-10-16 02:59:26.014.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.011 (0.013) seconds
+Test Suite 'WAVHTTPKitTests.xctest' passed at 2026-10-16 02:59:26.014.
+	 Executed 44 tests, with 0 failures (0 unexpected) in 0.543 (0.548) seconds
+Test Suite 'All tests' passed at 2026-10-16 02:59:26.014.
+	 Executed 44 tests, with 0 failures (0 unexpected) in 0.543 (0.551) seconds
+Test Suite 'All tests' started at 2026-10-16 02:59:26.071.
+Test Suite 'WAVCaptureKitTests.xctest' started at 2026-10-16 02:59:26.071.
+Test Suite 'WAVCaptureControllerTests' started at 2026-10-16 02:59:26.071.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testCancellingWhilePermissionIsPendingCannotStartLater]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testCancellingWhilePermissionIsPendingCannotStartLater]' passed (0.002 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testChangedAudioIsRejectedBeforeSharing]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testChangedAudioIsRejectedBeforeSharing]' passed (0.003 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testConsentIsRequiredBeforePermissionOrRecording]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testConsentIsRequiredBeforePermissionOrRecording]' passed (0.001 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testDuplicateStartCannotReplaceAnActiveRecording]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testDuplicateStartCannotReplaceAnActiveRecording]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testInterruptionAndLateCompletionCannotCreateSuccess]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testInterruptionAndLateCompletionCannotCreateSuccess]' passed (0.001 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testPermissionDenialDoesNotCreateValidRecording]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testPermissionDenialDoesNotCreateValidRecording]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testReloadRejectsChangedInspectionEvenWhenAudioHashMatches]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testReloadRejectsChangedInspectionEvenWhenAudioHashMatches]' passed (0.001 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testReRecordingPreservesEarlierOriginalAndUsesNewID]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testReRecordingPreservesEarlierOriginalAndUsesNewID]' passed (0.002 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testSilenceCannotBecomeAValidExport]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testSilenceCannotBecomeAValidExport]' passed (0.001 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testSimulatorMetadataIsAlwaysExplicit]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testSimulatorMetadataIsAlwaysExplicit]' passed (0.001 seconds).
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testValidCompletionPersistsIdentityMetadataAndReloads]' started.
+Test Case '-[WAVCaptureKitTests.WAVCaptureControllerTests testValidCompletionPersistsIdentityMetadataAndReloads]' passed (0.001 seconds).
+Test Suite 'WAVCaptureControllerTests' passed at 2026-10-16 02:59:26.085.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.013 (0.014) seconds
+Test Suite 'WAVFileValidatorTests' started at 2026-10-16 02:59:26.085.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testAcceptsDataBeforeFormat]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testAcceptsDataBeforeFormat]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testAcceptsExactFileSizeLimit]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testAcceptsExactFileSizeLimit]' passed (0.603 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testAcceptsExtraChunksAndRequiredOddPadding]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testAcceptsExtraChunksAndRequiredOddPadding]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testHashesEntireFileWithKnownSHA256]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testHashesEntireFileWithKnownSHA256]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testInspectsRealPCMAndFiniteDecodableMetadata]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testInspectsRealPCMAndFiniteDecodableMetadata]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsEmptyAndIncompletePCMFrames]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsEmptyAndIncompletePCMFrames]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsInconsistentBlockAlignAndByteRate]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsInconsistentBlockAlignAndByteRate]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsMissingOddPadding]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsMissingOddPadding]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsMissingOrDuplicateRequiredChunks]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsMissingOrDuplicateRequiredChunks]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsNonWAVAndShortHeaders]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsNonWAVAndShortHeaders]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsOversizeDataBeforeParsing]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsOversizeDataBeforeParsing]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsOversizeSparseFileBeforeReadingOrParsing]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsOversizeSparseFileBeforeReadingOrParsing]' passed (0.001 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsShortFormatChunk]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsShortFormatChunk]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsTruncatedChunkHeaderAndPayload]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsTruncatedChunkHeaderAndPayload]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsTruncatedRIFFAndUnexpectedTrailingBytes]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsTruncatedRIFFAndUnexpectedTrailingBytes]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsUnreadableMissingFileAndDirectory]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsUnreadableMissingFileAndDirectory]' passed (0.001 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsWrongRateChannelsDepthFloatAndExtensibleFormats]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsWrongRateChannelsDepthFloatAndExtensibleFormats]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsZeroAndBelowThresholdSilenceButAcceptsAudiblePCM]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testRejectsZeroAndBelowThresholdSilenceButAcceptsAudiblePCM]' passed (0.000 seconds).
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testURLInspectionMatchesData]' started.
+Test Case '-[WAVCaptureKitTests.WAVFileValidatorTests testURLInspectionMatchesData]' passed (0.001 seconds).
+Test Suite 'WAVFileValidatorTests' passed at 2026-10-16 02:59:26.694.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.608 (0.609) seconds
+Test Suite 'WAVCaptureKitTests.xctest' passed at 2026-10-16 02:59:26.694.
+	 Executed 30 tests, with 0 failures (0 unexpected) in 0.620 (0.623) seconds
+Test Suite 'All tests' passed at 2026-10-16 02:59:26.694.
+	 Executed 30 tests, with 0 failures (0 unexpected) in 0.620 (0.623) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

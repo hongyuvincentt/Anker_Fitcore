@@ -1,0 +1,7 @@
+LHY，Fitcore 的 iOS 客户端和全部真人 WAV / 语料评测任务统一交给你主负责，具体为 LHY-01～08 + D01～D05，共13项。请先看 README.md 和任务 Excel，再按 tasks/ 的任务卡实现。
+
+比赛前优先：LHY-01/02/03/04/08（WAV、soundcore SDK、HTTP、训练UI、真机集成）与 D01/D02（授权采样和人工标注）。D03/D04/D05 仍由你负责，但可在主链可演示后分阶段交付。Codex/Trae 只提供接口、算法审查与复核，不替代你对数据采集和交付负责。
+
+每项任务请反馈当前状态、Git分支/Commit/PR、真机或Mock测试、脱敏日志和阻断事项。不能把原始WAV、私人身份资料、声纹模板、Bearer Token、AWS密钥或.pem放入公开仓库。当前AWS真实AI受控单人记账通过，但并不意味着声纹或soundcore真机已验收；公网正常模式存在SOURCE_UNCERTAIN限制。除非单独授权，不要自行修改AWS生产环境。
+
+请先发回来：Mac/Xcode版本、SDK和设备准备、iOS私有仓库remote、预计首个可编译版本时间、现有模块完成情况、D01样本授权计划。

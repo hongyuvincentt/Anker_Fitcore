@@ -1,0 +1,14 @@
+task_id,status,priority,branch,commit,pull_request,test_scope,test_result,device_sdk,evidence_link,blocker,next_action,last_updated
+LHY-01,已完成（软件+真机录音验收；权限拒绝恢复测试待补）,P0,,,,WAVCaptureKit 30 项 XCTest；真机 4 段录音独立核验（16k/mono/PCM16、SHA256 与 sidecar 一致）,全部通过;iOS 真机取消/Home中断已验证,Xcode 26 / iOS 真机 + iPhone 18 Pro 模拟器,docs/LHY-01-VERIFICATION.json;voice/ 内 4 段录音及 sidecar,麦克风权限拒绝→恢复测试待用户手机操作补做留证,补做权限拒绝恢复测试并留证,2026-10-16
+LHY-02,未开始,P0,,,,,,设备与赛事 SDK 不可用,,录音豆及 SDK 权限未取得,等待设备与 SDK；如无设备按降级方案处理,2026-10-16
+LHY-03,已完成（离线 HTTP 客户端+合同测试；AWS 联调未授权）,P0,,,,WAVHTTPKit 44 项合同测试（ScriptedTransport 全拦截）+ WAVCaptureKit 30 项回归 + verify.py + 模拟器构建,74/74 通过;verify.py exit 0;Fitcore-Mock 模拟器构建 exit 0,Xcode 26 / macOS 26.6.2,docs/LHY-03-VERIFICATION.json,无本地 .git；目标私有仓库待用户确认;Step2 冻结 OpenAPI ZIP 缺失（Pending schema/resolve body 未冻结）;AWS 联调需另授权与真实 Token,用户确认仓库后推送基线+任务分支+PR；GAP-PENDING-SHAPE/GAP-PENDING-RESOLVE-BODY 待上游冻结,2026-10-16
+LHY-04,未开始,P0,,,,,,,依赖 LHY-03 集成（WAVHTTPKit DTO/状态接点已就绪）,按 LHY-03 交付说明接入训练状态与复盘页面,2026-10-16
+LHY-05,未开始,可选,,,,,,,依赖 LHY-01 与 D01 数据规程,D01 已有 2 段可先准备标注规范,2026-10-16
+LHY-06,未开始,可选,,,,,,,授权流程未建,等待授权流程,2026-10-16
+LHY-07,未开始,可选,,,,,,,API 扩展合同未冻结,等待合同,2026-10-16
+LHY-08,未开始,P0,,,,,,,依赖 LHY-01/02/03/04 与 E02,LHY-02 设备不可用为潜在阻断,2026-10-16
+D01,本机采集库已建立（2 段授权后录音已导入）,优先,,,,d01 import/validate/report 全链路;重复导入保护验证,通过;时间链合规（recorded_at 晚于 consent）,本机 ~/d01-collection（项目外）,~/d01-collection 内 CONSENT_REGISTER 与 d01 清单,团队/云端用途未授权;verify-human 待用户实际回听确认,用户回听后执行 verify-human（不代表服务端说话人认证）,2026-10-16
+D02,规范准备可开始（已有 2 段本机样本）,优先,,,,,,,本机标注规范未起草;不向 JZD/云端传输,用已有 2 段起草本机人工标注规范;第二人复核需另授权,2026-10-16
+D03,未开始,可选,,,,,,,依赖 D02,等待 D02,2026-10-16
+D04,未开始,可选,,,,,,,依赖 D01/D03 与独立审核人,等待前置任务,2026-10-16
+D05,未开始,可选,,,,,,,依赖 D04;真实模型预算未批准,等待前置与预算授权,2026-10-16

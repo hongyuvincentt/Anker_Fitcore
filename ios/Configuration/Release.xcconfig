@@ -1,0 +1,8 @@
+#include "Base.xcconfig"
+SWIFT_OPTIMIZATION_LEVEL = -O
+SWIFT_COMPILATION_MODE = wholemodule
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+ENABLE_TESTABILITY = NO
+FITCORE_ENVIRONMENT = demo
+// This is still a competition Mock build, not a production release.
+#include? "Local.xcconfig"

@@ -1,0 +1,106 @@
+{
+  "task": "LHY-03",
+  "app_version": "0.3.1 (8)",
+  "round_scope": "offline_http_client_and_contract_tests_only",
+  "software_status": "implemented_and_offline_contract_verified",
+  "aws_end_to_end": "not_performed_not_authorized_this_round",
+  "git_commit": null,
+  "pull_request": null,
+  "delivery_mode": "local_only_as_requested",
+  "contract": {
+    "frozen_openapi_zip": "Fitcore_Step2_LHY_API_Handoff_2026-10-15.zip NOT FOUND in delivery package; consistent with handoff/KNOWN_API_GAPS.md",
+    "sources_used": [
+      "reference/api/WAV_HTTP_API_2026-10-15.md (V1.1)",
+      "reference/api/STABLE_BASELINE_WAV_HTTP_REPORT_2026-10-15.md (15 desensitized real request/response samples)",
+      "reference/api/EVENT_FINISH_REPORT_2026-10-15.md",
+      "reference/api/IOS_AUDIO_CONTRACT_2026-10-15.md"
+    ],
+    "known_field_level_gaps": [
+      "GAP-PENDING-SHAPE: /pending item full schema not frozen; PendingItem decoded as tolerant JSONValue dictionary with only pending_id/status confirmed",
+      "GAP-PENDING-RESOLVE-BODY: resolve request body only resolution_id/action/context_version confirmed; confirm_set fields not frozen",
+      "GAP-EVENT-PAYLOAD: five persistent event types decoded with typed envelope, payload kept as raw JSONValue"
+    ]
+  },
+  "implementation": {
+    "new_module": "WAVHTTPKit (SwiftPM target at ios/Fitcore/Core/WAVHTTP)",
+    "files": [
+      "ios/Fitcore/Core/WAVHTTP/BackendHTTPClient.swift",
+      "ios/Fitcore/Core/WAVHTTP/WAVHTTPModels.swift",
+      "ios/Fitcore/Core/WAVHTTP/WAVUploadMultipart.swift",
+      "ios/Fitcore/Core/WAVHTTP/JSONValue.swift",
+      "tests/WAVHTTPKitTests/TestSupport.swift",
+      "tests/WAVHTTPKitTests/BackendHTTPClientTests.swift",
+      "tests/WAVHTTPKitTests/BackendHTTPContractTests.swift"
+    ],
+    "modified": [
+      "Package.swift (add WAVHTTPKit + WAVHTTPKitTests targets; platform macOS 12 -> 13 for Duration/ContinuousClock)",
+      "ios/Fitcore.xcodeproj (regenerated via scripts/generate_xcode_project.py; now 34 Swift sources including WAVHTTP)"
+    ],
+    "injection": "HTTPTransport protocol; URLSessionTransport (real) and ScriptedTransport (tests, intercepts every request); Base URL and Bearer token injected via BackendHTTPConfiguration (HTTPS enforced, token never logged)",
+    "upload_retry_identity": "same utterance_id + sequence + byte-identical multipart (deterministic boundary derived from identity); SHA-256 retained per upload; sequence allocated from 0 consecutively by WAVSessionUploader actor",
+    "trust_boundaries": "202 = persisted only; facts only from Facts/Review; SOURCE_UNCERTAIN/SOURCE_NOT_VERIFIED surfaced, never converted to VERIFIED_USER; no client-side speaker_status/source_type/voice_verified; /health sends no Authorization"
+  },
+  "routes_covered": {
+    "GET /health": "200 with status/model_provider; no auth header",
+    "POST /v1/sessions": "201 create; 409 duplicate recovered via GET (ensureSession)",
+    "GET /v1/sessions/{sid}": "200",
+    "POST /v1/sessions/{sid}/audio-jobs": "multipart file/utterance_id/sequence + optional audio_source; 202 accepted; local WAV pre-check (16k/mono/PCM16/non-silent/<=7,000,000B; multipart <=7,065,536B); 409 identity conflicts not retried; 413/422; 503/transport retried byte-identical",
+    "GET /v1/sessions/{sid}/audio-jobs/{utterance_id}": "queued/asr_running/final_ready/llm_running/done; done outcome COMMIT/DEFER/REJECT distinguished; automatic_retry_exhausted stops polling; waitForJobCompletion cancellable with deadline",
+    "GET /v1/sessions/{sid}/facts": "TrainingFactDTO decode",
+    "GET /v1/sessions/{sid}/pending": "tolerant decode; open items filtered client-side",
+    "POST /v1/sessions/{sid}/pending/{pid}/resolve": "confirmed fields only; 409 not blindly retried",
+    "GET /v1/sessions/{sid}/events": "cursor after=/limit=; local validation (negative cursor, limit 0/101 rejected without network); 409 cursor-ahead",
+    "POST /v1/sessions/{sid}/finish": "stable finish_id + real last_sequence; 202 draining -> poll; 409 awaiting_audio with missing list -> re-POST same finish_id; 409 FINISH_RANGE_EXCLUDES_ACCEPTED_AUDIO distinct; 200 finished with review snapshot",
+    "GET /v1/sessions/{sid}/finish": "200 status; 404",
+    "GET /v1/sessions/{sid}/review": "409 not finished; decode",
+    "drainToCompletion": "POST finish -> poll finish status -> re-POST on ready_to_finalize"
+  },
+  "error_mapping": {
+    "401/403": "unauthorized/forbidden, not retried, no token in message",
+    "404": "notFound",
+    "409": "sessionAlreadyExists / uploadConflict / eventCursorConflict / pendingConflict / finishAwaitingAudio / finishRangeExcludesAccepted / finishConflict / reviewNotFinished distinguished",
+    "413": "payloadTooLarge",
+    "422": "requestRejected",
+    "503": "serverUnavailable, retried with identical identity until retryAttempts budget",
+    "transport/cancellation": "retried up to budget / CancellationError propagated; pollTimeout on deadline",
+    "decode": "decodingFailed; unexpectedStatus for other codes"
+  },
+  "checks": [
+    {
+      "name": "WAVHTTPKit offline contract tests (all network intercepted by ScriptedTransport)",
+      "command": "swift test --scratch-path /tmp/fitcore-lhy03-build",
+      "tests": 44,
+      "failures": 0,
+      "exit_code": 0,
+      "detail": "BackendHTTPClientTests 25 + BackendHTTPContractTests 19; no real network, synthetic WAV only"
+    },
+    {
+      "name": "Existing WAVCaptureKit regression",
+      "command": "swift test --scratch-path /tmp/fitcore-lhy03-build",
+      "tests": 30,
+      "failures": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "Scaffold checks incl. strict-concurrency complete -warnings-as-errors compile of Core (now includes WAVHTTP)",
+      "command": "python3 -B scripts/verify.py",
+      "exit_code": 0
+    },
+    {
+      "name": "Fitcore-Mock iOS Simulator build",
+      "command": "xcodebuild -project ios/Fitcore.xcodeproj -scheme Fitcore-Mock -destination 'platform=iOS Simulator,name=iPhone 18 Pro' -derivedDataPath /tmp/fitcore-lhy03-dd build",
+      "exit_code": 0,
+      "warnings": 0
+    }
+  ],
+  "not_executed": [
+    "real AWS end-to-end (no authorization, no real token this round)",
+    "physical iPhone upload path (LHY-01 device already verified recording; upload UI integration belongs to LHY-04)"
+  ],
+  "scratch_path_note": "build/test scratch kept under /tmp because Desktop is iCloud-synced and FinderInfo xattr breaks codesign of .xctest bundles",
+  "next_actions": [
+    "user confirms target private repo, then push baseline + task branch + PR",
+    "freeze Pending schema and resolve body (upstream contract owner) to close GAP-PENDING-SHAPE / GAP-PENDING-RESOLVE-BODY",
+    "LHY-04 consumes WAVHTTPKit DTOs and state points"
+  ]
+}

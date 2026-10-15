@@ -1,0 +1,14 @@
+﻿task_id,验收门槛,必要证据,优先级,LHY提供证据,复核结论
+LHY-01,16k mono PCM16 WAV有效,iPhone真机WAV元数据及文件SHA,P0,,待核查
+LHY-02,soundcore真实SDK录音且断线可恢复,真机SDK日志和录音样例授权证据,P0,,待核查
+LHY-03,POST/GET、轮询、Finish/Review错误合同测试,Mock合同测试+PR,P0,,待核查
+LHY-04,Facts/Pending真实状态分离显示,屏幕录像+界面状态测试,P0,,待核查
+LHY-08,同Commit Xcode编译与可复现Demo,Mac真机Build+录屏+PR SHA,P0,,待核查
+D01,授权+匿名清单+音频格式+SHA,同意登记/manifest（不得附原音频）,P0,,待核查
+D02,人工参考与模型文本分开+审核,双人抽查及金标版本,P0,,待核查
+D03,语料来源明确+重复检测,schema校验与变更记录,P1,,待核查
+D04,split隔离+锁定与独立审批,heldout清单hash+审批记录,P1,,待核查
+D05,量化指标有分母+错误归因,脱敏评测报告+可复现脚本,P1,,待核查
+LHY-05,拒绝/撤销及数据索引导出,客户端测试视频+CSV,P1,,待核查
+LHY-06,不伪造说话人验证,Mock界面状态测试,P1,,待核查
+LHY-07,AI建议不修改训练事实,Mock界面状态测试,P1,,待核查

@@ -1,0 +1,14 @@
+﻿ID,领域,项目,原负责人,交接后执行负责人,审查/协作方,优先级,建议阶段,状态,仓库,依赖,已知进度,下一动作,验收证据,分支,提交,PR,阻断,最后更新
+LHY-01,iOS,WAVCaptureKit：iPhone 录音与标准 WAV 导出,LHY,LHY,Codex 核对 WAV/API,P0,比赛前主链,待核查,fitcore-ios,E03（接口）；录音权限,已下发规范，iPhone真机交付尚待核实,独立 WAVCaptureKit 源码与 Swift 单元测试,,,,,,2026-10-15
+LHY-02,iOS,SoundcoreInputAdapter：录音豆 SDK 接入,LHY,LHY,你确认设备、SDK 权限；Codex 核对接口,P0,比赛前主链,待核查,fitcore-ios,LHY-01；赛事 SDK、设备可用,SDK真实输入及设备验证待核实,隔离的 SDK Adapter 与状态机,,,,,,2026-10-15
+LHY-03,iOS,BackendHTTPClient：统一云端 API 客户端,LHY,LHY,Codex 提供并冻结 API 合同,P0,比赛前主链,待核查,fitcore-ios,E03；LHY-01,旧API交接材料存在，客户端实现待核实,独立 HTTP Client，使用环境注入 Base URL 与演示认证,,,,,,2026-10-15
+LHY-04,iOS,TrainingSessionUI：训练状态与复盘界面,LHY,LHY,你验收产品效果；Codex 审核状态字段,P0,比赛前主链,待核查,fitcore-ios,LHY-03,HTML Demo历史存在，iOS真机UI待核实,训练前、训练中、训练结束、复盘页面,,,,,,2026-10-15
+LHY-05,iOS,CorpusCollector：训练语音与同意记录导出,LHY,LHY,你审批授权流程；Codex 审核元数据结构,P1,比赛前可选,待核查,fitcore-ios,LHY-01；D01 数据规程,采集导出工具交付待核实,明确选择同意/拒绝/撤销的界面与记录,,,,,,2026-10-15
+LHY-06,iOS,SpeakerEnrollmentUI：声纹授权/撤销交互,LHY,LHY,TRAE 提供匹配结果合同；Codex 安全审查,P1,赛后／演示可选,待核查,fitcore-ios,F02；授权流程,声纹UI尚无核验提交,注册授权、撤销与样本清理界面原型,,,,,,2026-10-15
+LHY-07,iOS,AIInsightsUI：训练建议与解释界面,LHY,LHY,TRAE 提供 AI 输出契约；你验收文案,P1,赛后／演示可选,待核查,fitcore-ios,F03、F04、F05；API 扩展合同,AI可视化能力待后端实现,AI 问答、建议、错误与证据说明 UI,,,,,,2026-10-15
+LHY-08,iOS,完整 iOS App 集成与真机交付,LHY,LHY,你主验收；Codex 审查合并和 API 证据,P0,比赛前主链,待核查,fitcore-ios,LHY-01、02、03、04；E02,完整iOS真机验收尚未完成,Xcode 项目可构建 Commit/PR,,,,,,2026-10-15
+D01,语料评测,第一批扩展真人 WAV 采集,你+LHY,LHY,你负责批准采集范围、保留和共享边界,P0,比赛前优先,待核查,fitcore-coordination（仅匿名清单）,LHY-01；LHY-05 可选,7段旧样本存在，40段扩展未完成,目标约3–5人、约40段的授权 WAV 和非公开保存位置（目标非已完成）,,,,,,2026-10-15
+D02,语料评测,真实转写与结构化人工标注,你+TRAE,LHY,TRAE 提供语义字段建议；你/Codex 抽查与冻结,P0,比赛前优先,待核查,fitcore-coordination（脱敏标注）,D01,少量旧样本参考文本存在，扩展金标未核实,标注规范及数据字典,,,,,,2026-10-15
+D03,语料评测,100–150条语义语料库,你+TRAE,LHY,TRAE 提供难例，Codex 做结构检查,P1,赛后／比赛前有余力,待核查,fitcore-coordination,D02,文本语义库计划存在，100–150条未核实,100–150条目标样本语料 CSV/JSONL（目标非已完成）,,,,,,2026-10-15
+D04,语料评测,独立 Held-out 测试集建设,你+TRAE,LHY,Codex/你负责冻结核验，TRAE不得基于测试真值调参,P1,赛后／比赛前有余力,待核查,fitcore-coordination（受限访问）,D01、D03；审核人独立于调参方,独立held-out缺乏冻结证据,speaker/session/scene 维度的 split 清单,,,,,,2026-10-15
+D05,语料评测,算法与系统量化评测报告,你+TRAE,LHY,Codex 核验统计脚本，TRAE 解释错误原因,P1,赛后／比赛前有余力,待核查,fitcore-coordination,D04；测试日志与真实模型预算批准,量化跨说话者指标未形成,指标脚本、版本 SHA、数据集版本和独立测试记录,,,,,,2026-10-15

@@ -1,0 +1,80 @@
+{
+  "task": "LHY-01",
+  "app_version": "0.3.1 (8)",
+  "software_status": "implemented_and_locally_verified",
+  "physical_iphone_recording": "not_verified",
+  "soundcore_recording": "not_implemented_in_this_task",
+  "human_recordings_included": 0,
+  "git_commit": null,
+  "pull_request": null,
+  "delivery_mode": "local_only_as_requested",
+  "checks": [
+    {
+      "name": "WAV validator and capture controller XCTest",
+      "command": "swift test --scratch-path /private/tmp/fitcore-wav-controller-red",
+      "tests": 30,
+      "failures": 0,
+      "exit_code": 0,
+      "audio": "temporary synthetic fixtures only"
+    },
+    {
+      "name": "Existing Mock core and dynamic record regression",
+      "command": "python3 -B scripts/verify.py",
+      "exit_code": 0,
+      "scope": "Core, dynamic records, source/project membership, syntax; not a physical device test"
+    },
+    {
+      "name": "Final iOS Simulator SDK build",
+      "command": "xcodebuild -quiet -project ios/Fitcore.xcodeproj -scheme Fitcore-Mock -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath /private/tmp/fitcore-lhy01-derived CODE_SIGNING_ALLOWED=NO build",
+      "exit_code": 0
+    },
+    {
+      "name": "Final iPhone SDK unsigned build",
+      "command": "xcodebuild -quiet -project ios/Fitcore.xcodeproj -scheme Fitcore-Mock -configuration Debug -destination 'generic/platform=iOS' -derivedDataPath /private/tmp/fitcore-lhy01-device-build CODE_SIGNING_ALLOWED=NO build",
+      "exit_code": 0,
+      "scope": "Device architecture compilation only; not installed or recorded on a physical iPhone"
+    },
+    {
+      "name": "D01 local collection tools",
+      "command": "python3 -B -m unittest discover -s data/D01/tests -p 'test_*.py'",
+      "tests": 25,
+      "failures": 0,
+      "exit_code": 0
+    },
+    {
+      "name": "Independent task packager",
+      "command": "python3 -B -m unittest discover -s scripts -p 'test_package_lhy_tasks.py'",
+      "tests": 11,
+      "failures": 0,
+      "exit_code": 0
+    }
+  ],
+  "tdd_evidence": [
+    "Validator: 19 tests, 35 expected assertion failures against missing implementation; then all 19 passed.",
+    "Controller: tests first failed to compile because the capture backend/controller types did not exist; implementation then exercised real synthetic WAV acceptance.",
+    "Controller tests exposed unsupported atomic plus withoutOverwriting Data options; fixed to a new-file non-overwriting write, then 29 tests passed.",
+    "Independent review added a persisted inspection corruption regression: one assertion failed before comparing full WAV inspection on restore/export; final 30 tests passed.",
+    "D01 and packaging red-green details are included in their delivered test sources and D01 verification summary."
+  ],
+  "clean_archive_validation": {
+    "archive_path_and_hash_checks": "passed",
+    "lhy01_swift_tests": {"tests": 30, "failures": 0, "exit_code": 0},
+    "lhy01_existing_mock_regression": {"exit_code": 0},
+    "lhy01_standalone_simulator_build": {"exit_code": 0},
+    "d01_standalone_tests": {"tests": 25, "failures": 0, "exit_code": 0},
+    "scope": "Archives extracted to fresh temporary folders without backend, SDK, local signing or secret configuration"
+  },
+  "ui_manual_validation": "not_verified; native simulator UI automation was unavailable",
+  "remaining_acceptance": [
+    "Physical iPhone permission allow/deny/recovery, real voice recording, playback and export",
+    "Physical iPhone interruption, background and input-route behavior",
+    "Real exported WAV metadata/hash verification and D01 import",
+    "Purpose-scoped consent registration and actual human source review by JZD"
+  ],
+  "external_side_effects": {
+    "audio_uploads": 0,
+    "model_calls": 0,
+    "aws_changes": 0,
+    "git_pushes": 0
+  }
+}
