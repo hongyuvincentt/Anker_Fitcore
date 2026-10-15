@@ -41,4 +41,31 @@ final class RecordSnapshotReconcilerTests: XCTestCase {
         XCTAssertEqual(result.first?.pendingID, "2")
         XCTAssertTrue(result.allSatisfy(\.isOpen))
     }
+
+    func testUnknownEventTypePreservesPageInsteadOfFailingDecode() throws {
+        let json = """
+        {
+          "events": [
+            {
+              "event_seq": 9,
+              "event_id": "session-e000009",
+              "type": "PENDING_AUTO_RECOVERED",
+              "utterance_id": "u9",
+              "payload": {"recovery_kind": "auto_slot_merge", "matched_pending_id": 3},
+              "created_at": "2026-10-16T05:00:00Z"
+            }
+          ],
+          "next_cursor": 9,
+          "has_more": false
+        }
+        """
+
+        let page = try JSONDecoder().decode(EventsPage.self, from: Data(json.utf8))
+
+        XCTAssertEqual(page.events.count, 1)
+        XCTAssertEqual(page.events[0].type.rawValue, "PENDING_AUTO_RECOVERED")
+        XCTAssertEqual(page.events[0].eventSeq, 9)
+        XCTAssertEqual(page.events[0].utteranceID, "u9")
+        XCTAssertEqual(page.nextCursor, 9)
+    }
 }
