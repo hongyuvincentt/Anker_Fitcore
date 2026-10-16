@@ -31,3 +31,13 @@
 ## Git交付
 
 工具整合提交 `0a297530964bca090c9791455730488e5be6311a`，分支 `feat/data-tools-integration-20261016` 已推送。[Draft PR #2](https://github.com/hongyuvincentt/Anker_FItcore/pull/2) 已创建，未合并。D02空工作区校验valid=true，初标/独立复核/冻结均0；已准备2套私密空表，未填写真人内容。
+
+## 后续本人确认更新（2026-10-16）
+
+本文以上为PR创建时快照。其后本人确认已回听、录音清晰并核对UUID对应，两段已分别执行verify-human，当前本机D02队列合格来源2，team/cloud仍未授权。两份私密输入CSV各保存1行人工转录，结构检查通过（21列、ID一致、片段序号1、ASR列空）；语义标签、纠错上下文与revision元数据尚未齐全，保存初标/独立复核/冻结仍各0。只同步计数，不提交任何转录或实际授权行。
+
+### 本机初标保存更新
+
+本人进一步确认第二段整段纠正同一组、没有新增组。两份needs_review初标已写入私密不可变revision，校验valid=true：recordings2、segments2、revisions2、draft_segments2、reviewed_segments0、frozen_segments0。本机关联检查为一条record_set与一条指向前者的correct_set，不增加第二条训练事实；这仅是标注关系，不是后端Fact Engine实测。
+
+原CSV转录逐字保持不变；辅助标签的来源和待核对状态记录在私密修订理由，未明示组号保留UNKNOWN。整段WAV仅作为证据区间，未剪裁或覆盖。真实原话、数值标签、关联ID和实际授权行均不提交。两段继续属于开发试点，不能转作独立held-out。下一步由本人在本机核对辅助标签；独立第二人审核仍须team授权，冻结仍须独立审批。
