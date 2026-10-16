@@ -1,0 +1,30 @@
+FITCORE LHY SOURCE SNAPSHOT 2026-10-17
+
+SOURCE: user-uploaded Fitcore_LHY_Full_Source_and_Patch_20261017.zip
+HANDOFF: user-uploaded README_HANDOFF.md
+
+SHA256:
+- Fitcore_LHY_Full_Source_and_Patch_20261017.zip  c858803912c5a9c8dcad189ef15456ff6b629559d5f4535ef26377feb38f4037
+- README_HANDOFF.md                                 f0c9f1c5e1982545509b012f064c95b8d71cc43aabac412cd9d01de652c4d892
+
+PACKAGE INVENTORY:
+- zip entries: 99
+- fitcore-ios source files: 97
+- README_HANDOFF.md is byte-identical to LHY_HANDOFF/README_HANDOFF.md in the zip
+
+PRE-PUSH SNAPSHOT SCAN:
+- Local.xcconfig/.env path matches: 0
+- .wav / certificate / private-key path matches: 0
+- .xcframework/.framework/private Soundcore SDK path matches: 0
+- literal private-key/AWS/GitHub-token/JWT pattern matches: 0
+- generic token/license assignment scan produced 3 code-reference hits only:
+  * AppStore.swift: token = CloudCredentials.read(...)
+  * SoundcoreSDKRealSession.swift: license_signature: provider.licenseSignature
+  * CloudHistoryClient.swift: token = accessToken.trimmingCharacters(...)
+  These are identifiers/variable flows, not credential literals.
+
+VERIFICATION BOUNDARY (from handoff):
+- Linux swift test --scratch-path: 149 tests, 0 failures, exit 0
+- iOS App target/Xcode/private SDK auth/real-device reconnect/audio/IPA audit: NOT_RUN for this snapshot
+
+This branch is a backup snapshot only. It does not merge or modify Dnlock/fitcore-ios main or PR #4.
