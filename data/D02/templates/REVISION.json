@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "recording_id": "",
+  "revision_id": "",
+  "parent_revision_id": null,
+  "actor_id_pseudonym": "",
+  "at": "",
+  "event": "draft",
+  "reason": "",
+  "source_listened": false,
+  "source_sha256": "",
+  "segments": [],
+  "adjudicator_id_pseudonym": ""
+}

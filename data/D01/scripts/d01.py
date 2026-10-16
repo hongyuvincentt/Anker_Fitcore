@@ -247,6 +247,7 @@ def load_store(root):
     consents = validate_consent_rows(read_csv(root, "CONSENT_REGISTER.csv", CONSENT_FIELDS))
     recordings = read_csv(root, "WAV_MANIFEST.csv", MANIFEST_FIELDS)
     ids, hashes = set(), set()
+    provenance = sidecar_provenance(root)
     for row in recordings:
         for field in ("recording_id", "speaker_id_pseudonym", "consent_id", "session_id", "scene_id"):
             identifier(row[field], field)
@@ -259,7 +260,9 @@ def load_store(root):
             raise Invalid("manifest consent_id has no consent")
         if row["speaker_id_pseudonym"] != consent["speaker_id_pseudonym"]:
             raise Invalid("manifest speaker does not match consent")
-        timestamp(row["recorded_at"], "recorded_at")
+        recorded = timestamp(row["recorded_at"], "recorded_at")
+        if recorded < timestamp(consent["consent_timestamp"], "consent_timestamp"):
+            raise Invalid("manifest recorded_at precedes consent_timestamp")
         path = private_path(root, row["private_storage_pointer"])
         if row["private_storage_pointer"] != f"audio/{row['recording_id']}.wav":
             raise Invalid("private path does not match recording_id")
@@ -277,16 +280,44 @@ def load_store(root):
             raise Invalid("invalid quality_status")
         if row["quality_status"] == "human_verified" and row["recording_source"] not in HUMAN_SOURCES:
             raise Invalid("source cannot be human_verified")
+        expected_sidecar = provenance.get(row["recording_id"])
+        if expected_sidecar:
+            sidecar = private_path(root, f"sidecars/{row['recording_id']}.metadata.json")
+            raw = sidecar_bytes(sidecar)
+            if hashlib.sha256(raw).hexdigest() != expected_sidecar:
+                raise Invalid("retained sidecar hash mismatch")
+            validate_sidecar(sidecar_metadata(sidecar, raw), row, actual)
+    sidecar_dir = private_path(root, "sidecars")
+    if not set(provenance).issubset(ids):
+        raise Invalid("orphan sidecar provenance requires private reconciliation")
+    if sidecar_dir.exists():
+        if not sidecar_dir.is_dir() or sidecar_dir.stat().st_mode & 0o077:
+            raise Invalid("sidecar directory must have private permissions")
+        expected = {f"{key}.metadata.json" for key in provenance}
+        if any(path.name not in expected for path in sidecar_dir.iterdir()):
+            raise Invalid("orphan sidecar files require private reconciliation")
     return consents, recordings
 
 
-def sidecar_metadata(path):
-    if path is None:
-        return {}
+def sidecar_bytes(path):
+    if path.is_symlink() or not path.is_file():
+        raise Invalid("metadata sidecar must be a regular non-symlink file")
     if path.stat().st_size > 65536:
         raise Invalid("metadata sidecar too large")
+    with path.open("rb") as inp:
+        raw = inp.read(65537)
+    if len(raw) > 65536:
+        raise Invalid("metadata sidecar too large")
+    return raw
+
+
+def sidecar_metadata(path, raw=None):
+    if path is None:
+        return {}
+    if raw is None:
+        raw = sidecar_bytes(path)
     try:
-        result = json.loads(path.read_text(encoding="utf-8-sig"))
+        result = json.loads(raw.decode("utf-8-sig"))
     except (ValueError, UnicodeError):
         raise Invalid("invalid metadata sidecar JSON") from None
     if not isinstance(result, dict):
@@ -301,11 +332,70 @@ def sidecar_metadata(path):
     return result
 
 
+def sidecar_provenance(root):
+    """Old imports without a sidecar hash remain explicitly legacy/CLI provenance."""
+    path = private_path(root, "audit.jsonl")
+    if not path.exists():
+        return {}
+    index = {}
+    try:
+        with path.open(encoding="utf-8") as inp:
+            for line in inp:
+                event = json.loads(line)
+                if not isinstance(event, dict):
+                    raise Invalid("invalid provenance audit event")
+                if event.get("event") in ("imported", "sidecar_recovered") and event.get("sidecar_sha256"):
+                    key = identifier(event.get("recording_id"), "recording_id")
+                    digest = event["sidecar_sha256"]
+                    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                        raise Invalid("invalid sidecar provenance hash")
+                    if key in index:
+                        raise Invalid("duplicate sidecar provenance")
+                    index[key] = digest
+    except (ValueError, UnicodeError):
+        raise Invalid("invalid provenance audit JSON") from None
+    return index
+
+
+def validate_sidecar(meta, row, actual, when=None):
+    for field in ("recording_id", "speaker_id_pseudonym", "consent_id", "session_id", "scene_id", "recorded_at", "device_type"):
+        if field in meta and meta[field] != row[field]:
+            raise Invalid(f"metadata {field} mismatch")
+    if "utterance_id" in meta and meta["utterance_id"] != row["recording_id"]:
+        raise Invalid("metadata utterance_id mismatch")
+    if "file_name" in meta and meta["file_name"] != row["recording_id"] + ".wav":
+        raise Invalid("metadata file_name mismatch")
+    source = "simulator" if meta.get("is_simulated") is True else meta.get("recording_source")
+    if source is not None and source != row["recording_source"]:
+        raise Invalid("metadata recording_source mismatch")
+    if "completed_at" in meta:
+        completed = timestamp(meta["completed_at"], "completed_at")
+        if completed < timestamp(row["recorded_at"], "recorded_at") or (when is not None and completed > when):
+            raise Invalid("metadata completed_at outside recording/as-of interval")
+    inspection = meta.get("inspection", {})
+    if not isinstance(inspection, dict):
+        raise Invalid("metadata inspection must be an object")
+    aliases = {"sample_rate": "sample_rate_hz", "duration_seconds": "duration_sec"}
+    for values in (meta, inspection):
+        for key, claimed in values.items():
+            field = aliases.get(key, key)
+            if field in actual:
+                if field == "duration_sec":
+                    if type(claimed) not in (int, float) or not (actual[field] - 0.000001 <= claimed <= actual[field] + 0.000001):
+                        raise Invalid(f"metadata {field} mismatch")
+                elif field != "sha256" and type(claimed) in (int, float):
+                    if claimed != actual[field] or not math.isfinite(claimed):
+                        raise Invalid(f"metadata {field} mismatch")
+                elif str(claimed) != str(actual[field]):
+                    raise Invalid(f"metadata {field} mismatch")
+
+
 def import_recording(root, args, when):
     with locked(root):
         try:
             consents, recordings = load_store(root)
-            meta = sidecar_metadata(args.metadata)
+            raw_sidecar = sidecar_bytes(args.metadata) if args.metadata is not None else None
+            meta = sidecar_metadata(args.metadata, raw_sidecar)
             row = dict.fromkeys(MANIFEST_FIELDS, "")
             for field in ("recording_id", "speaker_id_pseudonym", "consent_id", "session_id", "scene_id", "recorded_at", "device_type", "recording_source"):
                 provided = getattr(args, field)
@@ -330,28 +420,23 @@ def import_recording(root, args, when):
             if timestamp(row["recorded_at"], "recorded_at") < timestamp(consent["consent_timestamp"], "consent_timestamp"):
                 raise Invalid("recorded_at precedes consent_timestamp")
             actual, data = inspect_wav(args.wav)
-            inspection = meta.get("inspection", {})
-            if not isinstance(inspection, dict):
-                raise Invalid("metadata inspection must be an object")
-            aliases = {"sample_rate": "sample_rate_hz", "duration_seconds": "duration_sec"}
-            for values in (meta, inspection):
-                for key, claimed in values.items():
-                    field = aliases.get(key, key)
-                    if field in actual:
-                        if field == "duration_sec":
-                            if type(claimed) not in (int, float) or not (actual[field] - 0.000001 <= claimed <= actual[field] + 0.000001):
-                                raise Invalid(f"metadata {field} mismatch")
-                        elif field != "sha256" and type(claimed) in (int, float):
-                            if claimed != actual[field] or not math.isfinite(claimed):
-                                raise Invalid(f"metadata {field} mismatch")
-                        elif str(claimed) != str(actual[field]):
-                            raise Invalid(f"metadata {field} mismatch")
+            validate_sidecar(meta, row, actual, when)
             if any(existing["recording_id"] == row["recording_id"] or existing["sha256"] == actual["sha256"] for existing in recordings):
                 raise Invalid("duplicate recording_id or sha256")
             pointer = f"audio/{row['recording_id']}.wav"
             target = private_path(root, pointer)
             if target.exists():
                 raise Invalid("audio destination exists; no overwrite")
+            sidecar_target = None
+            if raw_sidecar is not None:
+                sidecar_dir = private_path(root, "sidecars")
+                if not sidecar_dir.exists():
+                    sidecar_dir.mkdir(mode=0o700)
+                if not sidecar_dir.is_dir() or sidecar_dir.stat().st_mode & 0o077:
+                    raise Invalid("sidecar directory must have private permissions")
+                sidecar_target = private_path(root, f"sidecars/{row['recording_id']}.metadata.json")
+                if sidecar_target.exists():
+                    raise Invalid("sidecar destination exists; no overwrite")
             row.update({key: str(value) for key, value in actual.items() if key in MANIFEST_FIELDS})
             row.update(private_storage_pointer=pointer, quality_status="needs_review", label_status="unlabelled", data_split="unassigned", retention_status="active")
             descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -359,10 +444,16 @@ def import_recording(root, args, when):
                 out.write(data)
                 out.flush()
                 os.fsync(out.fileno())
+            if sidecar_target is not None:
+                descriptor = os.open(sidecar_target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                with os.fdopen(descriptor, "wb") as out:
+                    out.write(raw_sidecar)
+                    out.flush()
+                    os.fsync(out.fileno())
             # A crash here leaves an immutable orphan; subsequent imports refuse
             # to overwrite it. validate reports it for deliberate reconciliation.
             write_csv(root, "WAV_MANIFEST.csv", MANIFEST_FIELDS, recordings + [row])
-            audit(root, "imported", recording_id=row["recording_id"], sha256=row["sha256"], source=row["recording_source"])
+            audit(root, "imported", recording_id=row["recording_id"], sha256=row["sha256"], source=row["recording_source"], sidecar_sha256=hashlib.sha256(raw_sidecar).hexdigest() if raw_sidecar is not None else None)
             return {"recording": row, "human_verification": "manual_review_required"}
         except (Invalid, OSError) as error:
             audit(root, "import_rejected", reason=str(error) if isinstance(error, Invalid) else "private_io_failure")
@@ -373,6 +464,8 @@ def eligible(consents, recordings, purpose, when):
     accepted, excluded = [], []
     for row in recordings:
         reason = consent_reason(consents[row["consent_id"]], purpose, when)
+        if reason is None and timestamp(row["recorded_at"], "recorded_at") > when:
+            reason = "recording_not_yet_effective"
         if reason is None and row["quality_status"] != "human_verified":
             reason = "human_review_required"
         if reason:
@@ -382,13 +475,18 @@ def eligible(consents, recordings, purpose, when):
     return {"purpose": purpose, "as_of": when.isoformat(), "eligible": accepted, "excluded": excluded}
 
 
-def report(consents, recordings, when):
+def report(consents, recordings, when, root=None):
     current = eligible(consents, recordings, "local", when)["eligible"]
     people = {row["speaker_id_pseudonym"] for row in current}
     devices = Counter(row["device_type"] for row in current)
     scenes = Counter(row["scene_id"] for row in current)
     matrix = {scene: {"recordings": scenes[scene], "speakers": len({row["speaker_id_pseudonym"] for row in current if row["scene_id"] == scene})} for scene in SCENES}
-    return {"as_of": when.isoformat(), "imported_recordings": len(recordings), "human_verified_recordings": len(current), "actual_people": len(people), "pending_review_recordings": sum(row["quality_status"] == "needs_review" for row in recordings), "devices": dict(devices), "scenes": dict(scenes), "coverage_matrix": matrix, "eligible_counts": {purpose: len(eligible(consents, recordings, purpose, when)["eligible"]) for purpose in ("local", "team", "cloud")}, "targets_only": {"pilot_recordings": 10, "expanded_recordings_approx": 40, "speakers_min": 3, "speakers_max": 5}, "acceptance": "not_accepted", "acceptance_note": "counts are evidence only; D01 needs human acceptance, D02 review by JZD"}
+    result = {"as_of": when.isoformat(), "imported_recordings": len(recordings), "human_verified_recordings": len(current), "actual_people": len(people), "pending_review_recordings": sum(row["quality_status"] == "needs_review" for row in recordings), "devices": dict(devices), "scenes": dict(scenes), "coverage_matrix": matrix, "eligible_counts": {purpose: len(eligible(consents, recordings, purpose, when)["eligible"]) for purpose in ("local", "team", "cloud")}, "targets_only": {"pilot_recordings": 10, "expanded_recordings_approx": 40, "speakers_min": 3, "speakers_max": 5}, "acceptance": "not_accepted", "acceptance_note": "counts are evidence only; D01 needs actual human review, JZD review additionally requires team consent"}
+    if root is not None:
+        provenance = sidecar_provenance(root)
+        retained = sum(row["recording_id"] in provenance for row in recordings)
+        result["sidecar_provenance_counts"] = {"retained_verified": retained, "not_retained_legacy_or_cli": len(recordings) - retained}
+    return result
 
 
 def run(args):
@@ -416,6 +514,35 @@ def run(args):
             audit(root, "consent_withdrawn", consent_id=args.consent_id)
             return {"withdrawn": args.consent_id, "audio_retained_for_private_lifecycle_action": True}
         consents, recordings = load_store(root)
+        if args.command == "recover-sidecar":
+            key = identifier(args.recording_id, "recording_id")
+            row = next((row for row in recordings if row["recording_id"] == key), None)
+            if row is None:
+                raise Invalid("unknown recording_id")
+            reason = consent_reason(consents[row["consent_id"]], "local", when)
+            if reason:
+                raise Invalid("consent denied: " + reason)
+            raw = sidecar_bytes(args.metadata)
+            meta = sidecar_metadata(args.metadata, raw)
+            if not all(field in meta for field in ("recording_id", "recorded_at")) or not isinstance(meta.get("inspection"), dict) or not meta["inspection"].get("sha256"):
+                raise Invalid("original metadata requires recording_id, recorded_at and inspection sha256")
+            actual, _ = inspect_wav(private_path(root, row["private_storage_pointer"]))
+            validate_sidecar(meta, row, actual, when)
+            directory = private_path(root, "sidecars")
+            directory.mkdir(mode=0o700, exist_ok=True)
+            if not directory.is_dir() or directory.stat().st_mode & 0o077:
+                raise Invalid("sidecar directory must have private permissions")
+            target = private_path(root, f"sidecars/{key}.metadata.json")
+            if target.exists() or key in sidecar_provenance(root):
+                raise Invalid("sidecar already retained; no overwrite")
+            descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "wb") as out:
+                out.write(raw)
+                out.flush()
+                os.fsync(out.fileno())
+            # A crash before audit leaves an orphan that validation rejects.
+            audit(root, "sidecar_recovered", recording_id=key, sidecar_sha256=hashlib.sha256(raw).hexdigest(), source_path=str(args.metadata.resolve()))
+            return {"recovered": True, "quality_status": row["quality_status"]}
         if args.command == "verify-human":
             reviewer = identifier(args.reviewer, "reviewer")
             row = next((row for row in recordings if row["recording_id"] == args.recording_id), None)
@@ -433,7 +560,7 @@ def run(args):
         if args.command == "eligible":
             return eligible(consents, recordings, args.purpose, when)
         if args.command == "report":
-            return report(consents, recordings, when)
+            return report(consents, recordings, when, root)
         if args.command == "validate":
             expected = {row["private_storage_pointer"] for row in recordings}
             audio_dir = private_path(root, "audio")
@@ -447,7 +574,7 @@ def run(args):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
-    for name in ("init", "import", "validate", "eligible", "report", "withdraw", "verify-human"):
+    for name in ("init", "import", "validate", "eligible", "report", "withdraw", "verify-human", "recover-sidecar"):
         command = commands.add_parser(name)
         command.add_argument("--root", type=Path, required=True, help="private storage root, outside shared delivery folders")
         command.add_argument("--as-of", help="Shanghai date YYYY-MM-DD or timezone ISO8601; default current Asia/Shanghai time")
@@ -457,6 +584,9 @@ def parser():
             for field in ("recording_id", "consent_id", "session_id", "scene_id", "recorded_at", "device_type", "recording_source"):
                 command.add_argument("--" + field.replace("_", "-"))
             command.add_argument("--speaker-id", dest="speaker_id_pseudonym")
+        elif name == "recover-sidecar":
+            command.add_argument("--recording-id", required=True)
+            command.add_argument("--metadata", type=Path, required=True)
         elif name == "eligible":
             command.add_argument("--purpose", choices=("local", "team", "cloud"), required=True)
         elif name == "withdraw":
