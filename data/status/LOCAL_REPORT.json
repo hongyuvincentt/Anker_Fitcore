@@ -3,13 +3,13 @@
   "scope": "D01-D05 only",
   "workspace_kind": "isolated local source checkout; original snapshots preserved",
   "remote": "https://github.com/hongyuvincentt/Anker_FItcore",
-  "remote_status": "verified private; integration branch pending PR",
+  "remote_status": "private verified; task branch pushed; draft PR2 open; not merged",
   "baseline_commit": "d1e0cd474c3ddc195377865a1cc28fc32094f997",
   "tasks": {
     "D01": {
       "branch": "feat/d01-provenance",
       "commit": "b3e33b1f3ae3f612561f39e9a6b29dc67df92138",
-      "pull_request": "pending integration PR",
+      "pull_request": "https://github.com/hongyuvincentt/Anker_FItcore/pull/2",
       "artifact_summary": "provenance retention, consent/hash validation, 2+8 pilot sampling plan",
       "offline_tests": 37,
       "failures": 0,
@@ -19,7 +19,7 @@
     "D02": {
       "branch": "feat/d02-annotations",
       "commit": "78f29f2510f24d81ba9025d4bf733403c0d46526",
-      "pull_request": "pending integration PR",
+      "pull_request": "https://github.com/hongyuvincentt/Anker_FItcore/pull/2",
       "artifact_summary": "private annotation/revision/ASR separation, current consent filtering, dispute workflow",
       "offline_tests": 37,
       "failures": 0,
@@ -29,7 +29,7 @@
     "D03": {
       "branch": "feat/d03-corpus",
       "commit": "32c2b2beaef4a6c63215c5d5efe1056be5fe1c28",
-      "pull_request": "pending integration PR",
+      "pull_request": "https://github.com/hongyuvincentt/Anker_FItcore/pull/2",
       "artifact_summary": "source/version/duplicate/protection checker and 24 model-generated development drafts",
       "offline_tests": 13,
       "failures": 0,
@@ -39,7 +39,7 @@
     "D04": {
       "branch": "feat/d04-isolation",
       "commit": "d26b11ccfc217556b35f59542c8f2de3f5e1ddba",
-      "pull_request": "pending integration PR",
+      "pull_request": "https://github.com/hongyuvincentt/Anker_FItcore/pull/2",
       "artifact_summary": "strict speaker/session/environment/source isolation, exposure and freeze verifier",
       "offline_tests": 38,
       "failures": 0,
@@ -49,7 +49,7 @@
     "D05": {
       "branch": "feat/d05-metrics",
       "commit": "68de96ba0ea04b84d32b0b6854e5f59d2cfa8149",
-      "pull_request": "pending integration PR",
+      "pull_request": "https://github.com/hongyuvincentt/Anker_FItcore/pull/2",
       "artifact_summary": "version-pinned offline metrics, explicit denominators, unknown latency/cost reports",
       "offline_tests": 48,
       "failures": 0,
@@ -88,11 +88,12 @@
     "real_audio_uploads": 0,
     "paid_model_calls": 0,
     "aws_changes": 0,
-    "git_pushes": "pending",
+    "git_pushes": 1,
     "private_data_mutations": 2,
     "verify_human_executed": 0,
     "human_listening_claimed": 0,
-    "private_empty_annotation_workspace_initialized": true
+    "private_empty_annotation_workspace_initialized": true,
+    "private_empty_annotation_forms": 2
   },
   "smoke": {
     "smoke_commands": [
@@ -133,5 +134,13 @@
     "historical_source_snapshot": true
   },
   "historical_source_integration_commit": "0f59db7e58c745b0c69e0ccfd80b05e1f38cea69",
-  "integration_base": "83b3719128ab1ce3ca3346a14ef1c3fa63f92f6c"
+  "integration_base": "83b3719128ab1ce3ca3346a14ef1c3fa63f92f6c",
+  "integration_commit": "0a297530964bca090c9791455730488e5be6311a",
+  "pull_request": "https://github.com/hongyuvincentt/Anker_FItcore/pull/2",
+  "local_d02_validation": {
+    "valid": true,
+    "actual_drafts": 0,
+    "independent_reviews": 0,
+    "frozen_gold": 0
+  }
 }

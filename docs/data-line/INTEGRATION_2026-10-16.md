@@ -27,3 +27,7 @@
 根README历史“真人0段”等描述未由本分支覆盖：实际私密本机库存2段，不等于已验收2段；公开源码包仍含真人音频0、受限转写0、实际授权记录0。请第一台按上述区分同步根文档。本分支不修改iOS、Xcode、Package.swift、HTTP客户端、共享接口或统一tracker/tasks.csv。
 
 原数据独立仓库及ZIP保留历史快照；其中“sidecar未留存/remote未确认/170测试”等属于旧状态，以本说明和本分支新回归为准。本说明只报告来源/数量，不包含身份、真实音频、转写、实际授权行或Token。没有调用收费模型，没有修改AWS或自动合并分支。
+
+## Git交付
+
+工具整合提交 `0a297530964bca090c9791455730488e5be6311a`，分支 `feat/data-tools-integration-20261016` 已推送。[Draft PR #2](https://github.com/hongyuvincentt/Anker_FItcore/pull/2) 已创建，未合并。D02空工作区校验valid=true，初标/独立复核/冻结均0；已准备2套私密空表，未填写真人内容。
