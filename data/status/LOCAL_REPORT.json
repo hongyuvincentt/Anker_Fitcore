@@ -13,7 +13,7 @@
       "artifact_summary": "provenance retention, consent/hash validation, 2+8 pilot sampling plan",
       "offline_tests": 37,
       "failures": 0,
-      "blocker": "2 actual recordings need owner listening; original sidecars recovered2; 8 more captures; team/cloud unauthorized",
+      "blocker": "source review complete2; sidecars retained2; 8 more captures; team/cloud unauthorized",
       "commit_kind": "historical source task commit; see integration handoff for new repository commit"
     },
     "D02": {
@@ -23,7 +23,7 @@
       "artifact_summary": "private annotation/revision/ASR separation, current consent filtering, dispute workflow",
       "offline_tests": 37,
       "failures": 0,
-      "blocker": "actual source review and listening-based reference absent; JZD review lacks team consent",
+      "blocker": "2 local assisted drafts validated; owner tag check pending; no independent review; team/cloud unauthorized",
       "commit_kind": "historical source task commit; see integration handoff for new repository commit"
     },
     "D03": {
@@ -61,8 +61,8 @@
   "private_inventory_read_only": {
     "recordings": 2,
     "declared_speakers": 1,
-    "source_review_pending": 2,
-    "source_reviewed_eligible": 0,
+    "source_review_pending": 0,
+    "source_reviewed_eligible": 2,
     "retained_original_sidecars": 2,
     "recording_consent_current": true,
     "team_consent": false,
@@ -78,8 +78,8 @@
     "standalone_synthetic_evaluation_example": 1
   },
   "acceptance": {
-    "D01": "pending owner listening and capture targets",
-    "D02": "actual initial labels0, second reviews0",
+    "D01": "owner source review2; pilot capture target2/10; full acceptance pending",
+    "D02": "actual local initial drafts2 needs_review; second reviews0; frozen gold0",
     "D03": "development_only_not_frozen;24/100-150 drafts",
     "D04": "independent heldout0, approved freeze0",
     "D05": "real evaluations0;accuracy latency cost unmeasured"
@@ -88,10 +88,10 @@
     "real_audio_uploads": 0,
     "paid_model_calls": 0,
     "aws_changes": 0,
-    "git_pushes": 1,
-    "private_data_mutations": 2,
-    "verify_human_executed": 0,
-    "human_listening_claimed": 0,
+    "git_pushes": 2,
+    "private_data_mutations": 6,
+    "verify_human_executed": 2,
+    "human_listening_claimed": "owner explicitly confirmed in conversation",
     "private_empty_annotation_workspace_initialized": true,
     "private_empty_annotation_forms": 2
   },
@@ -139,8 +139,11 @@
   "pull_request": "https://github.com/hongyuvincentt/Anker_FItcore/pull/2",
   "local_d02_validation": {
     "valid": true,
-    "actual_drafts": 0,
+    "actual_drafts": 2,
     "independent_reviews": 0,
-    "frozen_gold": 0
+    "frozen_gold": 0,
+    "saved_transcript_input_files": 2,
+    "local_queue_eligible_recordings": 2,
+    "annotation_status": "2 needs_review assisted initial drafts validated; owner references unchanged; one record plus linked same-group correction; set indices UNKNOWN"
   }
 }
