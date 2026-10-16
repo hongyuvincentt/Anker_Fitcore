@@ -25,6 +25,23 @@ struct TodayView: View {
                         .font(.system(size: 11)).foregroundStyle(FitcoreTheme.muted)
                 }
                 captureCard
+                NavigationLink {
+                    CloudTrainingView()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "cloud.fill").font(.title3)
+                            .frame(width: 42, height: 42).background(FitcoreTheme.limeSoft, in: RoundedRectangle(cornerRadius: 14))
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("云端训练链 · 口述到复盘").font(.subheadline.weight(.bold))
+                            Text(store.cloudTraining.isMock ? "离线 Mock · 不访问真实后端" : "Real HTTP · 服务端事实为准")
+                                .font(.caption).foregroundStyle(FitcoreTheme.muted)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").font(.caption.weight(.bold))
+                    }
+                    .foregroundStyle(FitcoreTheme.navy).padding(16)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 22))
+                }.buttonStyle(.plain)
                 if store.review != nil {
                     Button { store.selectedTab = .insights } label: {
                         HStack(spacing: 12) {

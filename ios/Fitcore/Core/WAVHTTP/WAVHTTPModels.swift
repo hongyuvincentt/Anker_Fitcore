@@ -221,12 +221,33 @@ struct TrainingFactDTO: Decodable, Sendable, Equatable {
     }
 }
 
-enum PersistentEventType: String, Decodable, Sendable, Equatable {
-    case transcriptFinal = "TRANSCRIPT_FINAL"
-    case factCommitted = "FACT_COMMITTED"
-    case operationDeferred = "OPERATION_DEFERRED"
-    case inputRejected = "INPUT_REJECTED"
-    case processingError = "PROCESSING_ERROR"
+/// Event types are forward-compatible because events are notification/audit
+/// envelopes, not an additional source of training facts. The five values below
+/// are the frozen V1.1 types; a future server value is preserved as raw text so
+/// the page can still be applied and the client can refresh authoritative
+/// Facts/Pending snapshots without inventing semantics for the new event.
+struct PersistentEventType: RawRepresentable, Decodable, Sendable, Equatable {
+    let rawValue: String
+
+    init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        rawValue = try container.decode(String.self)
+    }
+
+    static let transcriptFinal = Self(rawValue: "TRANSCRIPT_FINAL")
+    static let factCommitted = Self(rawValue: "FACT_COMMITTED")
+    static let operationDeferred = Self(rawValue: "OPERATION_DEFERRED")
+    static let inputRejected = Self(rawValue: "INPUT_REJECTED")
+    static let processingError = Self(rawValue: "PROCESSING_ERROR")
+
+    var isFrozenV1Type: Bool {
+        self == .transcriptFinal || self == .factCommitted || self == .operationDeferred
+            || self == .inputRejected || self == .processingError
+    }
 }
 
 struct PersistentEvent: Decodable, Sendable, Equatable {
@@ -286,6 +307,26 @@ struct PendingItem: Decodable, Sendable, Equatable {
             }
         }
         return nil
+    }
+}
+
+/// Reconciles server-owned records without inventing client facts.
+/// `/facts` is an authoritative current snapshot, so same-id corrections replace
+/// old values. `/pending` may contain processed rows; only currently-open items
+/// belong in the user-facing Pending list. Unknown fields remain untouched.
+enum RecordSnapshotReconciler {
+    static func facts(
+        current _: [TrainingFactDTO],
+        fetched: [TrainingFactDTO]
+    ) -> [TrainingFactDTO] {
+        fetched
+    }
+
+    static func pending(
+        current _: [PendingItem],
+        fetched: [PendingItem]
+    ) -> [PendingItem] {
+        fetched.filter(\.isOpen)
     }
 }
 
