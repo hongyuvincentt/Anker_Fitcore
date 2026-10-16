@@ -1,8 +1,8 @@
 # D01 本地真人 WAV 采集准备工具
 
-当前状态：**真人采集未开始；本交付真人样本 0 段、已核验说话者 0 人；D01 待验收。** 没有创建任何真实参与者、音频、同意记录或人工金标。目标先做 10 段小批次，再扩展到约 40 段、3–5 人；这些是计划，不是成果。历史 7 段不在本交付中，也不推定获得再次使用/分享的授权。
+当前状态（2026-10-16只读核查）：**本机私密库已入库2段、1名声明说话者，ordinary和numeric_ambiguity各1段；两段均needs_review，已核验可用数0。** 格式及manifest哈希通过；现有授权仅local允许，team/cloud均false。这个代码交付包含真人样本0段、实际授权记录0行，不含任何人工金标。首批10段尚需实际补采8段；扩展约40段、3–5人仍为目标。历史7段不在本交付中，也不推定获得再次使用/分享的授权。
 
-目前可使用 iPhone 录音；没有 soundcore 录音豆与充电盒，相应设备覆盖记为未开始。LHY 可先录制本人声音，但本人也需要真实、用途明确的授权登记。D02 的转写/标签交给 JZD 复核；本工具不生成转写、ASR 结果或金标。工具完全离线，不调用模型、不自动上传，也不推送 Git。
+目前可使用iPhone录音；没有soundcore录音豆与充电盒，相应设备覆盖记为未开始。本人录音也需要真实、用途明确的授权登记。LHY实际回听后才能执行verify-human；这是本地来源复核，不是服务端VERIFIED_USER或声纹。JZD第二复核必须等待team用途授权，目前不可发送真实音频或受限标注。本工具不生成转写、ASR结果或金标，完全离线，不调用模型或自动上传；本轮在已确认的私有远端建立数据分支交付，来源提交与最新状态见 docs/data-line/INTEGRATION_2026-10-16.md。
 
 ## 文件边界和安装
 
@@ -23,6 +23,7 @@ d01-collection/
   WAV_MANIFEST.csv         # 仅由导入/复核工具更新
   audit.jsonl             # 初始化、导入失败/成功、真人复核、撤销事件
   audio/<recording_id>.wav # 不可覆盖的原始字节副本
+  sidecars/<recording_id>.metadata.json # 新导入时原样留存的可选原始sidecar
 ```
 
 两个表头与原交接包的新模板逐列一致，支持 UTF-8 BOM。`private_storage_pointer` 固定为 `audio/<recording_id>.wav`，相对于私密根目录，不记录个人绝对路径。CSV 仍属私人登记资料，不能因为化名就直接公开整个运行目录。
@@ -64,7 +65,9 @@ python3 -B data/D01/scripts/d01.py import \
   --session-id SESSION_ID --scene-id ordinary
 ```
 
-支持 iOS `schema_version=1`：顶层 `recording_id`、`recorded_at`、`device_type`、`recording_source`、`is_simulated`、`local_recording_consent`；`inspection` 对象可含 `sample_rate`、`channels`、`bits_per_sample`、`frame_count`、`duration_seconds`、`size_bytes`、`sha256`。所有提供的格式/长度/哈希元数据都与原始 WAV 重新计算结果核对。`utterance_id`、`completed_at`、`file_name`、`rms_dbfs`、`peak_dbfs` 不用来决定身份/授权/真人来源，实际格式和非静音由 WAV 字节验证。
+支持iOS `schema_version=1`：顶层recording_id、recorded_at、device_type、recording_source、is_simulated、local_recording_consent；inspection可含sample_rate、channels、bits_per_sample、frame_count、duration_seconds、size_bytes、sha256，均与实际WAV核对。utterance_id若提供必须与recording_id相同，file_name若提供必须为该ID.wav，completed_at不能早于录制时间或晚于本次判断时刻。这些字段不决定身份/授权/真人来源；rms_dbfs和peak_dbfs也不是人声/身份判断。
+
+新导入时有sidecar则原样保存在私密sidecars目录（文件0600），imported审计事件保存其SHA256；再次读取时核对原字节、ID、来源与音频元数据，拒绝被改写或缺失的已登记sidecar。不自动生成sidecar。旧记录或纯CLI导入没有sidecar时，报告not_retained_legacy_or_cli；格式/manifest有效不等于原始sidecar证据齐全。本轮两段已找回原始导出sidecar并核对补入，见recover-sidecar；仍等待本人实际回听来源复核。不能将重建JSON称为原始文件。异常中断遗留sidecar/音频由validate报告，逐项私下对账，不自动删除或覆盖。
 
 无 sidecar 时可手工提供匿名元数据：
 
@@ -126,16 +129,22 @@ python3 -B -m unittest discover -s data/D01/tests -p 'test_*.py'
 
 测试只在临时目录创建明确标为 synthetic 的波形和虚构测试授权，运行结束后由 `TemporaryDirectory` 清理；不向交付目录写任何 WAV/授权行。初始失败与修复结果见 [红绿记录](verification/RED_GREEN.md)。
 
-允许进入 D01 ZIP 的完整列表仅如下 7 个文件，其它运行文件均不在允许范围：
+允许进入D01 ZIP的完整列表如下，其它运行文件不在允许范围：
 
 ```text
 data/D01/README.md
 data/D01/SAMPLING_MATRIX.md
 data/D01/scripts/d01.py
 data/D01/tests/test_d01.py
+data/D01/tests/test_provenance.py
 data/D01/templates/CONSENT_REGISTER.csv
 data/D01/templates/WAV_MANIFEST.csv
 data/D01/verification/RED_GREEN.md
+data/D01/verification/2026-10-16.json
 ```
 
 两个模板必须只含表头。禁止打包 WAV、实际 consent/manifest 行、sidecar、审计日志、转写、授权证据、私密存储根、绝对个人路径、密钥及缓存。CSV 模板中没有示范性 `granted` 数据行。
+
+## 找回旧样本的原始 sidecar
+
+`recover-sidecar --root /PRIVATE/collection --recording-id ID --metadata /PRIVATE/original/ID.metadata.json` 只接受实际找回的原文件。校验现存 WAV、UUID、原录制时间和 inspection.sha256，原字节以 0600 保存，私密 audit 另记来源路径与补入时间；不改 manifest、WAV 或人工确认状态。重复补入拒绝，缺失的原文件继续保留证据缺口，不从 manifest 重建。

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:fitcore:d05:input:v1",
+  "title": "D05 offline companion utterance; not an HTTP DTO",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "case_id", "recording_id", "version_ref", "mode", "source", "gold_status", "expected_facts", "actual", "adjudication", "slices"],
+  "properties": {
+    "schema_version": {"const": "d05.input.v1"},
+    "case_id": {"$ref": "#/$defs/text"},
+    "recording_id": {"$ref": "#/$defs/text"},
+    "version_ref": {"$ref": "#/$defs/text"},
+    "mode": {"enum": ["synthetic", "text_simulation", "replay", "real_audio"]},
+    "source": {"enum": ["synthetic_fixture", "human_written", "model_generated", "human_audio", "recorded_replay"]},
+    "gold_status": {"enum": ["reviewed", "unreviewed", "disputed"]},
+    "expected_facts": {"type": "array", "items": {"$ref": "#/$defs/identified_fact"}},
+    "actual": {"type": "array", "items": {"$ref": "#/$defs/decision"}},
+    "adjudication": {
+      "type": "object", "additionalProperties": false, "required": ["status"],
+      "properties": {
+        "status": {"enum": ["reviewed", "unreviewed"]},
+        "reviewer_id": {"$ref": "#/$defs/text"},
+        "asr_transcription_error": {"type": ["boolean", "null"]},
+        "asr_numeric_error": {"type": ["boolean", "null"]},
+        "semantic_error": {"type": ["boolean", "null"]},
+        "fact_engine_error": {"type": ["boolean", "null"]}
+      },
+      "allOf": [{"if": {"properties": {"status": {"const": "reviewed"}}}, "then": {"required": ["reviewer_id"]}}]
+    },
+    "slices": {
+      "type": "object", "additionalProperties": false,
+      "required": ["device", "speaker", "noise", "action", "numeric_ambiguity"],
+      "properties": {
+        "device": {"$ref": "#/$defs/text"}, "speaker": {"$ref": "#/$defs/text"},
+        "noise": {"$ref": "#/$defs/text"}, "action": {"$ref": "#/$defs/text"},
+        "numeric_ambiguity": {"$ref": "#/$defs/text"}
+      }
+    },
+    "latency": {
+      "oneOf": [{"type": "null"}, {
+        "type": "object", "additionalProperties": false, "required": ["ms", "evidence_ref"],
+        "properties": {"ms": {"type": "number", "minimum": 0}, "evidence_ref": {"$ref": "#/$defs/text"}}
+      }]
+    },
+    "cost": {
+      "oneOf": [{"type": "null"}, {
+        "type": "object", "additionalProperties": false, "required": ["status"],
+        "properties": {
+          "status": {"enum": ["verified", "unverified"]},
+          "amount": {"oneOf": [{"type": "number", "minimum": 0}, {"type": "string", "minLength": 1}]},
+          "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+          "evidence_ref": {"$ref": "#/$defs/text"},
+          "evidence_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+        },
+        "allOf": [{"if": {"properties": {"status": {"const": "verified"}}}, "then": {"required": ["amount", "currency", "evidence_ref"]}}]
+      }]
+    }
+  },
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "pattern": "^[^\\r\\n]+$"},
+    "fact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["exercise", "weight_kg", "reps", "temporal_modality", "time", "target"],
+      "properties": {
+        "exercise": {"type": ["string", "null"]},
+        "weight_kg": {"type": ["number", "null"], "minimum": 0},
+        "reps": {"type": ["integer", "null"], "minimum": 0},
+        "temporal_modality": {"enum": ["completed", "historical", "planned", "unknown", null]},
+        "time": {}, "target": {}
+      }
+    },
+    "identified_fact": {
+      "type": "object", "additionalProperties": false, "required": ["fact_id", "fact"],
+      "properties": {"fact_id": {"$ref": "#/$defs/text"}, "fact": {"$ref": "#/$defs/fact"}}
+    },
+    "decision": {
+      "oneOf": [{
+        "type": "object", "additionalProperties": false,
+        "required": ["decision", "origin", "fact_id", "fact"],
+        "properties": {"decision": {"const": "COMMIT"}, "origin": {"enum": ["auto", "manual"]}, "fact_id": {"$ref": "#/$defs/text"}, "fact": {"$ref": "#/$defs/fact"}}
+      }, {
+        "type": "object", "additionalProperties": false, "required": ["decision", "origin"],
+        "properties": {"decision": {"enum": ["DEFER", "REJECT"]}, "origin": {"enum": ["auto", "manual"]}}
+      }]
+    }
+  },
+  "$comment": "Runtime additionally enforces finite numbers, unique IDs, cross-field source/mode and reviewed flags, completed fact identity, versions and actual local evidence. Missing/null flags stay unknown. Each line is one utterance."
+}
