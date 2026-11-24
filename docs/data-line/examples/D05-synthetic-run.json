@@ -1,0 +1,17 @@
+{
+  "schema_version": "d05.input.v1",
+  "evaluation_time": "2026-10-16T00:00:00Z",
+  "runs": {
+    "fixture-v1": {
+      "source_commit": "synthetic:fixture-v1",
+      "dataset_version": "synthetic-fixture-v1",
+      "model_provider": "none",
+      "model_version": "not_used",
+      "schema_version": "d05.input.v1",
+      "environment": {
+        "python": "3.9+",
+        "platform": "synthetic"
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "task": "D01",
+  "tool_version": "d01-provenance-v1",
+  "baseline_tests": 25,
+  "new_regressions": 9,
+  "tests": 34,
+  "failures": 0,
+  "command": "python3 -B -m unittest discover -s data/D01/tests -p 'test_*.py'",
+  "red_evidence": "8 new tests initially failed (9 assertion failures and missing report field); additional orphan-sidecar test failed before its guard was added.",
+  "green_evidence": "All 34 tests passed after sidecar retention, identity/time/hash checks and orphan detection.",
+  "test_data": "temporary synthetic WAV and consent fixtures only",
+  "private_readonly_inventory": {
+    "recordings": 2,
+    "declared_speakers": 1,
+    "ordinary": 1,
+    "numeric_ambiguity": 1,
+    "needs_review": 2,
+    "source_reviewed_eligible": 0,
+    "team_consent": false,
+    "cloud_consent": false,
+    "format_and_manifest_hash": "passed",
+    "retained_original_sidecars": 0
+  },
+  "real_audio_in_delivery": 0,
+  "human_listening_performed_by_agent": false,
+  "verify_human_executed": false,
+  "private_store_mutations": 0,
+  "acceptance": "software_verified_human_acceptance_pending",
+  "snapshot_kind": "historical pre-integration source evidence; current status docs/data-line/INTEGRATION_2026-10-16.md"
+}

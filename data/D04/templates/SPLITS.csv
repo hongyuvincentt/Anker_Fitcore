@@ -1,0 +1,1 @@
+﻿recording_id,speaker_id_pseudonym,session_id,scene_id,dataset_version,split_train_dev_heldout,frozen_at,sha256_audio,sha256_gold,split_review_owner,is_excluded,exclusion_reason

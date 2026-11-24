@@ -1,0 +1,1 @@
+﻿dataset_version,source_commit,evaluation_time,model_provider,mode_mock_replay_real,split,sample_count,correct_auto_commit,wrong_commit,missed_fact,defer_pending,asr_error,semantic_error,fact_engine_error,latency_p50_ms,latency_p95_ms,cost_if_verified,reviewer,notes
